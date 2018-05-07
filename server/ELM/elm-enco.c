@@ -516,8 +516,8 @@ int enco_purchase_debit(void)
         if(cancel_trig == 1){
             cancel_trig = 0;
             cancel_out = 1;
-          // goto stop1;
-            goto stop1;
+           // return 0;
+           goto stop1;
 
         }
 
@@ -1086,7 +1086,7 @@ stop:
                     LCD_I2C_CLEAR(&lcd_i2c);
                     LCD_I2C_OUTLET_NAME(&lcd_i2c);
                     lcd_i2c_puts(&lcd_i2c,0,2,"KARTU TIDAK DIKENAL");
-                    sprintf(label,"KARTU TIDAK DIKENAL");
+                    sprintf(label,"TIMEOUT");
                     info = label;
                     send_info();
                     get_out = 1;

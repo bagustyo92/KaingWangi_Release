@@ -104,6 +104,8 @@ int server_stop(void)
 int socket_desc , client_sock , c , read_size, read_size2, read_size3;
 char client_message[2000];
 char cancel_message[2000];
+char unknown_message[2000];
+char paket_message[2000] = "1";
 char server_message[2000] = "OK";
 //    char *server_message = "OK";
 char server_message2[2000] = "CANCELING FROM SERVER";
@@ -127,10 +129,10 @@ void read_cancel(){
         //        data = respon(&pesan);
         while( read_size2 > 0 )
         {
-            if (get_out==1){
-// //                cancel_trig = 1;
-                return 0;
-            }
+           if (get_out==1){
+//                cancel_trig = 1;
+               return 0;
+           }
             puts("oke");
             int cancel;
             cancel = strcmp(cancel_message, "cancel");
@@ -153,9 +155,6 @@ void read_cancel(){
 
 void send_info(){
     write(client_sock , info , strlen(info));
- //    printer();
-	// sleep(4);
-	// printer();
 }
 
 
@@ -258,7 +257,7 @@ void* server_thread(void *data)
 
 
             }else if(paket2 == 0 ){
-                
+                status = false;
                 data_paket = 2;
                 reader_start(2);
                 read_cancel();
@@ -278,7 +277,7 @@ void* server_thread(void *data)
                 //                write(client_sock , info , strlen(info));
                 //                printer();
             }else if(paket3 == 0){
-               
+                status = false;
 
                 //STARTING THREAD FOR SCAN CARD
                 data_paket = 3;
@@ -311,8 +310,8 @@ void* server_thread(void *data)
 
     }
 
-    sleep(2);
-    ///	bank_sam_init();
-    sleep(2);
+    // sleep(2);
+    // /// bank_sam_init();
+    // sleep(2);
 }
 //=============END Name of thread who start or stop======================
