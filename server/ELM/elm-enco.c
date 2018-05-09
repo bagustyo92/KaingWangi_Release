@@ -540,7 +540,8 @@ int enco_purchase_debit(void)
         {
             elm_debug (ELM_DEBUG_WARNING, "%s: purchase_debt timeout\n", __func__);
             elm_cst2_set_access (ELM_CST_EFAIL);
-//            cst2_status = MDR_TIMEOUT;
+
+           cst2_status = MDR_TIMEOUT;
             goto stop;
         }
 
@@ -1005,6 +1006,8 @@ stop:
 
                         info = label;
                         send_info();
+                        cancel_trig = 0;
+                        cancel_out = 1;
                         get_out = 1;
 
 //                        tariff = cost;
@@ -1014,7 +1017,7 @@ stop:
                         tsc.type = ELM_TRANS_MEMCARD_NORMAL;
                         cst_tsc->type= tsc.type;
 
-                        cancel_trig = 0;
+                        // cancel_trig = 0;
 
  
                         puts("MASSUUUK\n");
@@ -1047,10 +1050,13 @@ stop:
                         tarif_print = print_tarif;
                         saldo_print = print_saldo;
                         send_info();
+                        cancel_trig = 0;
+                        cancel_out = 1;
+                        get_out = 1;
                        printer();
                        sleep(4);
                        printer();
-                        get_out = 1;
+                        
 
 //                        tariff = cost;
 //                        info = label;
@@ -1063,9 +1069,11 @@ stop:
                     LCD_I2C_CLEAR(&lcd_i2c);
                     LCD_I2C_OUTLET_NAME(&lcd_i2c);
                     lcd_i2c_puts(&lcd_i2c,0,2,"KONEKSI GAGAL");
-                    sprintf(label,"\t\t    KONEKSI GAGAL");
+                    sprintf(label,"\tKONEKSI GAGAL, SILAHKAN ULANGI LAGI!");
                     info = label;
                     send_info();
+                    cancel_trig = 0;
+                        cancel_out = 1;
                     get_out = 1;
 
                 }else
@@ -1076,6 +1084,8 @@ stop:
                     sprintf(label,"KARTU TIDAK DIKENAL");
                     info = label;
                     send_info();
+                    cancel_trig = 0;
+                        cancel_out = 1;
                     get_out = 1;
                     
                 }
@@ -1086,24 +1096,33 @@ stop:
                     LCD_I2C_CLEAR(&lcd_i2c);
                     LCD_I2C_OUTLET_NAME(&lcd_i2c);
                     lcd_i2c_puts(&lcd_i2c,0,2,"KARTU TIDAK DIKENAL");
-                    sprintf(label,"TIMEOUT");
+                    sprintf(label,"KARTU TIDAK DIKENAL");
+                    puts("TIMEOUT");
                     info = label;
                     send_info();
                     get_out = 1;
+                    cancel_trig = 0;
+                        cancel_out = 1;
                     printf("ENTER\n");
                 }
                 break;
             }
-        }else
+        }
+        else
         {
             LCD_I2C_CLEAR(&lcd_i2c);
             LCD_I2C_OUTLET_NAME(&lcd_i2c);
             lcd_i2c_puts(&lcd_i2c,0,2,"KARTU TIDAK DIKENAL");
             sprintf(label,"KARTU TIDAK DIKENAL");
+            puts("TIMEOUT2");
             info = label;
             send_info();
+            cancel_trig = 0;
+            cancel_out = 1;
             get_out = 1;
+
         }
+
     }
 
 stop1:

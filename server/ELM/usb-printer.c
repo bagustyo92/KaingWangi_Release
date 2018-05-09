@@ -25,6 +25,7 @@ void printer (){
     fd=open(ComPort, O_WRONLY);
 
     if(fd == -1);
+    iOut = write(fd,"\x1B\x61\x1",3);
     iOut = write(fd,"\x1C\x70\x1\x0",4);  //gambar
     iOut = write(fd,"\x1B\x61\x0",3);      // ratakiri
     iOut = write(fd,"\x1B\x21\x2",3);    //size

@@ -129,20 +129,26 @@ void read_cancel(){
         //        data = respon(&pesan);
         while( read_size2 > 0 )
         {
-           if (get_out==1){
-//                cancel_trig = 1;
-               return 0;
-           }
-            puts("oke");
+           
+            // puts("oke");
             int cancel;
             cancel = strcmp(cancel_message, "cancel");
 
+           if (get_out==1){
+               // cancel_trig = 0;
+               return 0;
+           }
 
             if(cancel == 0){
                 puts ("CANCELING CHOOSING PACKAGE");
                 cancel_trig = 1;
                 break;
             }
+
+            
+            puts("oke");
+            cancel_trig = 1;     
+            break;
 
         }
         memset( &cancel_message, 0, sizeof(cancel_message));
@@ -231,7 +237,8 @@ void* server_thread(void *data)
 
 
             if(cancel == 0){
-                break;
+                // break;
+                goto end;
             }
 
             if (paket1 == 0){
@@ -248,11 +255,13 @@ void* server_thread(void *data)
                 if(get_out == 1){
                     get_out = 0;
                     break;
+                    // goto end;
                 }
 
                 if(cancel_out == 1){
                     cancel_out = 0;
                     break;
+                    // goto end;
                 }
 
 
@@ -301,9 +310,10 @@ void* server_thread(void *data)
                 //                }
 
             }
+            break;
 
         }
-
+end:
         memset( &client_message, 0, sizeof(client_message));
         read_size = 0;
         //        }
