@@ -104,6 +104,7 @@ int server_stop(void)
 int socket_desc , client_sock , c , read_size, read_size2, read_size3;
 char client_message[2000];
 char cancel_message[2000];
+char member_message[2000];
 char unknown_message[2000];
 char paket_message[2000] = "1";
 char server_message[2000] = "OK";
@@ -157,6 +158,7 @@ void read_cancel(){
     }
 
 }
+
 
 
 void send_info(){
@@ -229,11 +231,14 @@ void* server_thread(void *data)
             puts(client_message);
             write(client_sock , server_message , strlen(server_message));
 
-            int paket1, paket2, paket3, cancel;
+            int paket1, paket2, paket3, cancel, add, topup;
             paket1 = strcmp(client_message, "1");
             paket2 = strcmp(client_message, "2");
             paket3 = strcmp(client_message, "3");
             cancel = strcmp(client_message, "cancel");
+            add = strcmp(client_message, "ADD_MEMBER");
+            topup = strcmp(client_message, "TOP_UP");
+           
 
 
             if(cancel == 0){
@@ -241,10 +246,49 @@ void* server_thread(void *data)
                 goto end;
             }
 
+            if(add == 0){
+                data_paket = 4;
+                reader_start(1);
+                read_cancel();
+                reader_stop();
+                
+                if(get_out == 1){
+                    get_out = 0;
+                    break;
+                    // goto end;
+                }
+
+                if(cancel_out == 1){
+                    cancel_out = 0;
+                    break;
+                    // goto end;
+                }
+            }
+
+            if(topup == 0){
+                data_paket = 5;
+                reader_start(1);
+                read_cancel();
+                reader_stop();
+                
+                if(get_out == 1){
+                    get_out = 0;
+                    break;
+                    // goto end;
+                }
+
+                if(cancel_out == 1){
+                    cancel_out = 0;
+                    break;
+                    // goto end;
+                }
+            }
+
             if (paket1 == 0){
                 //                status = false;
                 //                write(client_sock , paket_message , strlen(paket_message));
                 data_paket = 1;
+		
 
                 reader_start(1);
                 read_cancel();
@@ -304,11 +348,6 @@ void* server_thread(void *data)
                     cancel_out = 0;
                     break;
                 }
-
-                //                if (reads == 1){
-                //                    write(client_sock , info , strlen(info));
-                //                }
-
             }
             break;
 

@@ -25,6 +25,7 @@ static const char * const elm_location[] =
 /* MAYTAG */
    [0] = "ENCO_LAUNDRY",
    [1] = "KALIBATA",
+   [2] = "MANGGA BESAR",
     
 };
 

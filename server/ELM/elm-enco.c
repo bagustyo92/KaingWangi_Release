@@ -97,29 +97,29 @@ enum
 
 unsigned char commandGetCardNumber[19] =
 {0x10,0x02,0x08,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
- 0x05,0x43,0x31,0x30,0x30,0x31,0x4e,0x10,0x03};
+0x05,0x43,0x31,0x30,0x30,0x31,0x4e,0x10,0x03};
 unsigned char commandGetBalance[30] =
 {0x10,0x02,0x08,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
- 0x10,0x31,0x33,0x31,0x30,0x37,0x31,0x37,0x31,0x35,0x30,
- 0x36,0x34,0x32,0x30,0x30,0x31,0x1f,0x10,0x03};
-unsigned char commandPurchaseDebit[40] =
-{0x10,0x02,0x08,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
- 0x1a,0x46,
- 0x32,0x30,0x31,0x31,0x31,0x37,
- 0x31,0x30,0x33,0x37,0x34,0x32,
- 0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x31,
- 0X30,0X30,0X31,
- 0x63,0x10,0x03};
+	0x10,0x31,0x33,0x31,0x30,0x37,0x31,0x37,0x31,0x35,0x30,
+	0x36,0x34,0x32,0x30,0x30,0x31,0x1f,0x10,0x03};
+	unsigned char commandPurchaseDebit[40] =
+	{0x10,0x02,0x08,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+		0x1a,0x46,
+		0x32,0x30,0x31,0x31,0x31,0x37,
+		0x31,0x30,0x33,0x37,0x34,0x32,
+		0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x31,
+		0X30,0X30,0X31,
+		0x63,0x10,0x03};
 
-struct Enco enco;
-int saldo;
+		struct Enco enco;
+		int saldo;
 
-enum
-{
-    RELEASE_ETOLL_NUM = 0,
-    READ_ETOLL_NUM,
-    SAVE_ETOLL_NUM,
-};
+		enum
+		{
+			RELEASE_ETOLL_NUM = 0,
+			READ_ETOLL_NUM,
+			SAVE_ETOLL_NUM,
+		};
 
 /**
  * elm_cst2_set_access:
@@ -127,371 +127,372 @@ enum
  * Set status akses CST.
  **/
 
-void elm_cst2_set_access (ELMCstAccess access)
-{
-    g_static_mutex_lock (&access_mutex);
-    cst2_access = access;
-    g_static_mutex_unlock (&access_mutex);
-}
+		void elm_cst2_set_access (ELMCstAccess access)
+		{
+			g_static_mutex_lock (&access_mutex);
+			cst2_access = access;
+			g_static_mutex_unlock (&access_mutex);
+		}
 /* konversi data transaksi: saldo terakhir dan jumlah transaksi
    dari hexadecimal ke decimal. Mandiri is totally sucks! */
-static void convert_tsc (unsigned char *tsc_report)
-{
-    int i, j;
-    unsigned long amount, balance;
-    unsigned char n[4];
-    char str[9];
+		static void convert_tsc (unsigned char *tsc_report)
+		{
+			int i, j;
+			unsigned long amount, balance;
+			unsigned char n[4];
+			char str[9];
 
     /* konversi jumlah transaksi ke decimal */
-    for (i = 0, j = 0; i < sizeof(n); i++, j += 2)
-    {
-        g_snprintf (str, 3, (char*) tsc_report + 46 + j);
-        n[i] = strtol (str, NULL, 0x10);
-    }
-    amount = n[3] << 24 | n[2] << 16 | n[1] << 8 | n[0];
-    g_snprintf (str, sizeof(str), "%.8lu", amount);
-    memcpy (tsc_report + 46, str, 8);
+			for (i = 0, j = 0; i < sizeof(n); i++, j += 2)
+			{
+				g_snprintf (str, 3, (char*) tsc_report + 46 + j);
+				n[i] = strtol (str, NULL, 0x10);
+			}
+			amount = n[3] << 24 | n[2] << 16 | n[1] << 8 | n[0];
+			g_snprintf (str, sizeof(str), "%.8lu", amount);
+			memcpy (tsc_report + 46, str, 8);
 
     /* konversi saldo terkahir ke decimal */
-    for (i = 0, j = 0; i < sizeof(n); i++, j += 2)
-    {
-        g_snprintf (str, 3, (char*) tsc_report + 54 + j);
-        n[i] = strtol (str, NULL, 0x10);
-    }
-    balance = n[3] << 24 | n[2] << 16 | n[1] << 8 | n[0];
-    g_snprintf (str, sizeof(str), "%.8lu", balance);
-    memcpy (tsc_report + 54, str, 8);
-}
+			for (i = 0, j = 0; i < sizeof(n); i++, j += 2)
+			{
+				g_snprintf (str, 3, (char*) tsc_report + 54 + j);
+				n[i] = strtol (str, NULL, 0x10);
+			}
+			balance = n[3] << 24 | n[2] << 16 | n[1] << 8 | n[0];
+			g_snprintf (str, sizeof(str), "%.8lu", balance);
+			memcpy (tsc_report + 54, str, 8);
+		}
 
-static inline void bin_to_ascii(unsigned char *hex, char *str, int len)
-{
-    char ascii[2];
-    int i;
+		static inline void bin_to_ascii(unsigned char *hex, char *str, int len)
+		{
+			char ascii[2];
+			int i;
 
-    for (i = 0; i < len-1; i++) {
-        sprintf(ascii, "%c", hex[i]);
-        str[i] = *ascii;
-    }
-    str[i] = '\0';
-}
+			for (i = 0; i < len-1; i++) {
+				sprintf(ascii, "%c", hex[i]);
+				str[i] = *ascii;
+			}
+			str[i] = '\0';
+		}
 
-static void bri_jc_convert_tsc (unsigned char *tsc_report)
-{
-    int i, j;
-    unsigned long balance;
-    unsigned char n[4];
-    char str[9];
-
-    /* konversi saldo terkahir ke decimal */
-    for (i = 0, j = 0; i < sizeof(n); i++, j += 2)
-    {
-        g_snprintf (str, 3, (char*) tsc_report + 48 + j);
-        n[i] = strtol (str, NULL, 0x10);
-    }
-
-    balance = n[0] << 24 | n[1] << 16 | n[2] << 8 | n[3];
-    g_snprintf (str, sizeof(str), "%.8lu", balance);
-    memcpy (tsc_report + 48, str, 8);
-}
-
-static void bri_df_convert_tsc (unsigned char *tsc_report)
-{
-    int i, j;
-    unsigned long balance;
-    unsigned char n[4];
-    char str[9];
+		static void bri_jc_convert_tsc (unsigned char *tsc_report)
+		{
+			int i, j;
+			unsigned long balance;
+			unsigned char n[4];
+			char str[9];
 
     /* konversi saldo terkahir ke decimal */
-    for (i = 0, j = 0; i < sizeof(n); i++, j += 2)
-    {
-        g_snprintf (str, 3, (char*) tsc_report + 79 + j);
-        n[i] = strtol (str, NULL, 0x10);
-    }
+			for (i = 0, j = 0; i < sizeof(n); i++, j += 2)
+			{
+				g_snprintf (str, 3, (char*) tsc_report + 48 + j);
+				n[i] = strtol (str, NULL, 0x10);
+			}
 
-    balance = n[0] << 24 | n[1] << 16 | n[2] << 8 | n[3];
-    g_snprintf (str, sizeof(str), "%.8lu", balance);
-    memcpy (tsc_report + 79, str, 8);
-}
+			balance = n[0] << 24 | n[1] << 16 | n[2] << 8 | n[3];
+			g_snprintf (str, sizeof(str), "%.8lu", balance);
+			memcpy (tsc_report + 48, str, 8);
+		}
 
-static void bni_convert_tsc (unsigned char *tsc_report)
-{
-    int i, j;
-    unsigned long amount, balance;
-    unsigned char n[3];
-    char str[7];
+		static void bri_df_convert_tsc (unsigned char *tsc_report)
+		{
+			int i, j;
+			unsigned long balance;
+			unsigned char n[4];
+			char str[9];
+
+    /* konversi saldo terkahir ke decimal */
+			for (i = 0, j = 0; i < sizeof(n); i++, j += 2)
+			{
+				g_snprintf (str, 3, (char*) tsc_report + 79 + j);
+				n[i] = strtol (str, NULL, 0x10);
+			}
+
+			balance = n[0] << 24 | n[1] << 16 | n[2] << 8 | n[3];
+			g_snprintf (str, sizeof(str), "%.8lu", balance);
+			memcpy (tsc_report + 79, str, 8);
+		}
+
+		static void bni_convert_tsc (unsigned char *tsc_report)
+		{
+			int i, j;
+			unsigned long amount, balance;
+			unsigned char n[3];
+			char str[7];
 
     /* konversi jumlah transaksi ke decimal */
-    for (i = 0, j = 0; i < sizeof(n); i++, j += 2)
-    {
-        g_snprintf (str, 3, (char*) tsc_report + 45 + j);
-        n[i] = strtol (str, NULL, 0x10);
-    }
+			for (i = 0, j = 0; i < sizeof(n); i++, j += 2)
+			{
+				g_snprintf (str, 3, (char*) tsc_report + 45 + j);
+				n[i] = strtol (str, NULL, 0x10);
+			}
 
-    amount = n[0] << 16 | n[1] << 8 | n[2];
-    g_snprintf (str, sizeof(str), "%.6lu", amount);
-    memcpy (tsc_report + 45, str, 6);
+			amount = n[0] << 16 | n[1] << 8 | n[2];
+			g_snprintf (str, sizeof(str), "%.6lu", amount);
+			memcpy (tsc_report + 45, str, 6);
 
     /* konversi saldo terkahir ke decimal */
-    for (i = 0, j = 0; i < sizeof(n); i++, j += 2)
-    {
-        g_snprintf (str, 3, (char*) tsc_report + 51 + j);
-        n[i] = strtol (str, NULL, 0x10);
-    }
-    balance = n[0] << 16 | n[1] << 8 | n[2];
-    g_snprintf (str, sizeof(str), "%.6lu", balance);
-    memcpy (tsc_report + 51, str, 6);
-}
+			for (i = 0, j = 0; i < sizeof(n); i++, j += 2)
+			{
+				g_snprintf (str, 3, (char*) tsc_report + 51 + j);
+				n[i] = strtol (str, NULL, 0x10);
+			}
+			balance = n[0] << 16 | n[1] << 8 | n[2];
+			g_snprintf (str, sizeof(str), "%.6lu", balance);
+			memcpy (tsc_report + 51, str, 6);
+		}
 
-static void convert_cmd2 (const struct mdr_etoll *mdr,  char *res)
-{
-    int i = 0, j = 0;
+		static void convert_cmd2 (const struct mdr_etoll *mdr,  char *res)
+		{
+			int i = 0, j = 0;
 
-    while (i < sizeof mdr->tsc_cmd)
-    {        g_snprintf (res + j, 3, "%x", *(mdr->tsc_cmd + i));
-        j += 2;
-        ++i;
-    }
-    res[j] = '\0';
-}
+			while (i < sizeof mdr->tsc_cmd)
+				{        g_snprintf (res + j, 3, "%x", *(mdr->tsc_cmd + i));
+			j += 2;
+			++i;
+		}
+		res[j] = '\0';
+	}
 
-inline static gboolean validate_tsc_data (const unsigned char *data, size_t len)
-{
-    size_t i;
+	inline static gboolean validate_tsc_data (const unsigned char *data, size_t len)
+	{
+		size_t i;
 
-    for (i = 0; i < len; i++)
-        if ((data[i] < '0' || data[i] > '9') &&
-                (data[i] < 'A' || data[i] > 'Z') &&
-                (data[i] != 0x20))
-        {
-            fprintf(stderr,"%s: %x %x %x %d\n",__func__, data[i-2], data[i-1], data[i], i);
-            return FALSE;
-        }
-    return TRUE;
-}
+		for (i = 0; i < len; i++)
+			if ((data[i] < '0' || data[i] > '9') &&
+				(data[i] < 'A' || data[i] > 'Z') &&
+				(data[i] != 0x20))
+			{
+				fprintf(stderr,"%s: %x %x %x %d\n",__func__, data[i-2], data[i-1], data[i], i);
+				return FALSE;
+			}
+			return TRUE;
+		}
 
-static gboolean elm_cst2_get_run (void)
-{
-    gboolean retval;
+		static gboolean elm_cst2_get_run (void)
+		{
+			gboolean retval;
 
-    g_static_mutex_lock (&mutex);
-    retval = enco.run;
-    g_static_mutex_unlock (&mutex);
-    return retval;
-}
+			g_static_mutex_lock (&mutex);
+			retval = enco.run;
+			g_static_mutex_unlock (&mutex);
+			return retval;
+		}
 
-static unsigned long get_last_balance (unsigned char *tsc_report)
-{
-    g_return_val_if_fail (tsc_report != NULL, 0UL);
+		static unsigned long get_last_balance (unsigned char *tsc_report)
+		{
+			g_return_val_if_fail (tsc_report != NULL, 0UL);
 
-    char tmp[2], balance[9];
-    unsigned char *ptr = tsc_report + 54;
-    unsigned long retval;
-    int i;
+			char tmp[2], balance[9];
+			unsigned char *ptr = tsc_report + 54;
+			unsigned long retval;
+			int i;
 
-    for (i = 0; i < 8; i++)
-    {
-        g_snprintf (tmp, sizeof(tmp), "%c", ptr[i]);
-        balance[i] = *tmp;
-    }
-    balance[i] = 0;
-    retval = strtoul (balance, NULL, 16);
-    retval = GULONG_TO_BE (retval);
+			for (i = 0; i < 8; i++)
+			{
+				g_snprintf (tmp, sizeof(tmp), "%c", ptr[i]);
+				balance[i] = *tmp;
+			}
+			balance[i] = 0;
+			retval = strtoul (balance, NULL, 16);
+			retval = GULONG_TO_BE (retval);
 
-    return retval;
-}
+			return retval;
+		}
 
-int enco_open(void)
-{
+		int enco_open(void)
+		{
 
-    cst_tsc = (ELMTscData*) malloc(sizeof(ELMTscData));
-    CTX = mdr_init();
-    if (!CTX)
-    {
-        elm_debug (ELM_DEBUG_ERROR, "%s: open fail\n", __func__);
-        return FALSE;
-    }
+			cst_tsc = (ELMTscData*) malloc(sizeof(ELMTscData));
+			CTX = mdr_init();
+			if (!CTX)
+			{
+				elm_debug (ELM_DEBUG_ERROR, "%s: open fail\n", __func__);
+				return FALSE;
+			}
 
-    return TRUE;
+			return TRUE;
 
-}
+		}
 
 
-int enco_start(void)
-{
-    enco.run= TRUE;
-    mutexelm = g_mutex_new ();
-    condelm = g_cond_new ();
+		int enco_start(void)
+		{
+			enco.run= TRUE;
+			mutexelm = g_mutex_new ();
+			condelm = g_cond_new ();
 
-    ENCOThread = g_thread_create(enco_thread, NULL,TRUE, NULL);
+			ENCOThread = g_thread_create(enco_thread, NULL,TRUE, NULL);
 
-    g_mutex_lock (mutexelm);
-    g_cond_wait (condelm, mutexelm);
-    g_mutex_unlock (mutexelm);
+			g_mutex_lock (mutexelm);
+			g_cond_wait (condelm, mutexelm);
+			g_mutex_unlock (mutexelm);
 
-    return 1;
-}
+			return 1;
+		}
 
-int bank_sam_init(void)
-{
+		int bank_sam_init(void)
+		{
 
-    LCD_I2C_CLEAR(&lcd_i2c);
+			LCD_I2C_CLEAR(&lcd_i2c);
 
-    lcd_i2c_puts(&lcd_i2c,0,0,"MANDIRI");
-    lcd_i2c_puts(&lcd_i2c,0,1,"BRI");
-    lcd_i2c_puts(&lcd_i2c,0,2,"BNI");
-    lcd_i2c_puts(&lcd_i2c,0,3,"BCA");
+			lcd_i2c_puts(&lcd_i2c,0,0,"MANDIRI");
+			lcd_i2c_puts(&lcd_i2c,0,1,"BRI");
+			lcd_i2c_puts(&lcd_i2c,0,2,"BNI");
+			lcd_i2c_puts(&lcd_i2c,0,3,"BCA");
 
-    if(mandiri_sam_init())
-    {
-        lcd_i2c_puts(&lcd_i2c,10,0,"OK");
-    }else
-    {
-        lcd_i2c_puts(&lcd_i2c,10,0,"FAILED");
-    }
+			if(mandiri_sam_init())
+			{
+				lcd_i2c_puts(&lcd_i2c,10,0,"OK");
+			}else
+			{
+				lcd_i2c_puts(&lcd_i2c,10,0,"FAILED");
+			}
 
-    if(bri_sam_init())
-    {
-        lcd_i2c_puts(&lcd_i2c,10,1,"OK");
-    }else
-    {
-        lcd_i2c_puts(&lcd_i2c,10,1,"FAILED");
-    }
+			if(bri_sam_init())
+			{
+				lcd_i2c_puts(&lcd_i2c,10,1,"OK");
+			}else
+			{
+				lcd_i2c_puts(&lcd_i2c,10,1,"FAILED");
+			}
 
-    if(bni_sam_init())
-    {
-        lcd_i2c_puts(&lcd_i2c,10,2,"OK");
-    }else
-    {
-        lcd_i2c_puts(&lcd_i2c,10,2,"FAILED");
-    }
+			if(bni_sam_init())
+			{
+				lcd_i2c_puts(&lcd_i2c,10,2,"OK");
+			}else
+			{
+				lcd_i2c_puts(&lcd_i2c,10,2,"FAILED");
+			}
 
-    if(bca_sam_init())
-    {
-        lcd_i2c_puts(&lcd_i2c,10,3,"OK");
-    }else
-    {
-        lcd_i2c_puts(&lcd_i2c,10,3,"FAILED");
+			if(bca_sam_init())
+			{
+				lcd_i2c_puts(&lcd_i2c,10,3,"OK");
+			}else
+			{
+				lcd_i2c_puts(&lcd_i2c,10,3,"FAILED");
 
-    }
+			}
 
-    return 1;
+			return 1;
 
-}
+		}
 
-int enco_stop(void)
-{
-    enco.run= FALSE;
-    g_thread_join(ENCOThread);
+		int enco_stop(void)
+		{
+			enco.run= FALSE;
+			g_thread_join(ENCOThread);
 
-    g_mutex_free(mutexelm);
-    g_cond_free(condelm);
-    return 1;
-}
+			g_mutex_free(mutexelm);
+			g_cond_free(condelm);
+			return 1;
+		}
 
-void* enco_thread(void *data)
-{
+		void* enco_thread(void *data)
+		{
 
-    char cid;
-    gboolean con;
-    int ret;
-    long time;
-    elm_debug (ELM_DEBUG_INFO, "%s: thread started", __func__);
-    char *label;
+			char cid;
+			gboolean con;
+			int ret;
+			long time;
+			elm_debug (ELM_DEBUG_INFO, "%s: thread started", __func__);
+			char *label;
     //    char label[2000];
     //char text[60];
-    g_mutex_lock(mutexelm);
-    g_cond_broadcast(condelm);
-    g_mutex_unlock(mutexelm);
+			g_mutex_lock(mutexelm);
+			g_cond_broadcast(condelm);
+			g_mutex_unlock(mutexelm);
 
-    LCD_I2C_CLEAR(&lcd_i2c);
+			LCD_I2C_CLEAR(&lcd_i2c);
 
-    LCD_I2C_OUTLET_NAME(&lcd_i2c);
-    sleep(2);
+			LCD_I2C_OUTLET_NAME(&lcd_i2c);
+			sleep(2);
     /// bank_sam_init();
-    sleep(2);
+			sleep(2);
 
 
-    time=times(NULL);
-    time_reboot=times(NULL);
-    while(TRUE)
-    {
-        LCD_I2C_CLEAR(&lcd_i2c);
-        LCD_I2C_OUTLET_NAME(&lcd_i2c);
+			time=times(NULL);
+			time_reboot=times(NULL);
+			while(TRUE)
+			{
+				LCD_I2C_CLEAR(&lcd_i2c);
+				LCD_I2C_OUTLET_NAME(&lcd_i2c);
 
-        lcd_i2c_puts(&lcd_i2c,0,2," SILAHKAN TEMPELKAN ");
-        lcd_i2c_puts(&lcd_i2c,0,3,"       KARTU        ");
+				lcd_i2c_puts(&lcd_i2c,0,2," SILAHKAN TEMPELKAN ");
+				lcd_i2c_puts(&lcd_i2c,0,3,"       KARTU        ");
 
-        enco_purchase_debit();
+				enco_purchase_debit();
 
-next:
-        sleep(2);
-
-
-        if(((times(NULL)-time)*10)>3600000)
-        {
-            elm_buffer_close();
-            elm_buffer_open();
-            time=times(NULL);
-        }
+				next:
+				sleep(2);
 
 
-    }
-    return NULL;
+				if(((times(NULL)-time)*10)>3600000)
+				{
+					elm_buffer_close();
+					elm_buffer_open();
+					time=times(NULL);
+				}
 
-}
+
+			}
+			return NULL;
+
+		}
 
 //int enco_purchase_debit(int data)
-int enco_purchase_debit(void)
-{
+		int enco_purchase_debit(void)
+		{
 
-    ELMTscData tsc;
-    unsigned long amount = 0, balance;
-    int ret,eid;
-    char cid;
-    int report_size=94;
-    long time1, time2, time3;
-    struct timeval  tv;
-    static int cancel_count = 0;
-    unsigned int status, tmp_status;
+			ELMTscData tsc;
+			unsigned long amount = 0, balance;
+			int ret,eid;
+			char cid;
+			int report_size=94;
+			long time1, time2, time3;
+			struct timeval  tv;
+			static int cancel_count = 0;
+			unsigned int status, tmp_status;
     // char nama_paket[50];
-    
-    unsigned char tsc_report[255],tsc_report_str[256], label[1000], cost[100], print[1000], print_saldo[1000],print_resi[1000],print_paket[1000],print_tarif[1000];
-    gboolean con;
-    elm_debug (ELM_DEBUG_INFO, "%s: work start\n", __func__);
-    time_t T = time(NULL);
-    struct tm tm = *localtime(&T);
+
+			unsigned char tsc_report[255],tsc_report_str[256], label[1000], cost[100], print[1000], print_saldo[1000],
+			print_resi[1000],print_paket[1000],print_tarif[1000], nama[1000], telp[1000],uid[1000], nominal[1000];
+			gboolean con;
+			elm_debug (ELM_DEBUG_INFO, "%s: work start\n", __func__);
+			time_t T = time(NULL);
+			struct tm tm = *localtime(&T);
 //    time_t mytime;
 //    mytime = time(NULL);
 //    printf(ctime(&mytime));
 
 
 
-    switch (data_paket) {
-    case 1:
-        amount = elm_cost.pkt2 ;
-        cst_tsc->tarif = amount;
-        cst_tsc->machine=elm_data.machine;
-        cst_tsc->location=elm_data.location;
-        cst_tsc->sn=elm_data.sn;
-        cst_tsc->paket=2;
-        break;
-    case 2 :
-        amount = elm_cost.pkt3 ;
-        cst_tsc->tarif = amount;
-        cst_tsc->machine=elm_data.machine;
-        cst_tsc->location=elm_data.location;
-        cst_tsc->sn=elm_data.sn;
-        cst_tsc->paket=3;
-        break;
-    case 3 :
-        amount = elm_cost.pkt4 ;
-        cst_tsc->tarif = amount;
-        cst_tsc->machine=elm_data.machine;
-        cst_tsc->location=elm_data.location;
-        cst_tsc->sn=elm_data.sn;
-        cst_tsc->paket=4;
-        break;
-    }
+			switch (data_paket) {
+				case 1:
+				amount = elm_cost.pkt2 ;
+				cst_tsc->tarif = amount;
+				cst_tsc->machine=elm_data.machine;
+				cst_tsc->location=elm_data.location;
+				cst_tsc->sn=elm_data.sn;
+				cst_tsc->paket=2;
+				break;
+				case 2 :
+				amount = elm_cost.pkt3 ;
+				cst_tsc->tarif = amount;
+				cst_tsc->machine=elm_data.machine;
+				cst_tsc->location=elm_data.location;
+				cst_tsc->sn=elm_data.sn;
+				cst_tsc->paket=3;
+				break;
+				case 3 :
+				amount = elm_cost.pkt4 ;
+				cst_tsc->tarif = amount;
+				cst_tsc->machine=elm_data.machine;
+				cst_tsc->location=elm_data.location;
+				cst_tsc->sn=elm_data.sn;
+				cst_tsc->paket=4;
+				break;
+			}
     //    amount = elm_cost.pkt1 ;
     //    printf("SUCC2\n");
     //    cst_tsc->tarif = amount;
@@ -507,45 +508,45 @@ int enco_purchase_debit(void)
 
     //  amount = elm_cost;
 
-    struct mdr_etoll2 et1;
+			struct mdr_etoll2 et1;
 
 
 
-    do {
+			do {
 
-        if(cancel_trig == 1){
-            cancel_trig = 0;
-            cancel_out = 1;
+				if(cancel_trig == 1){
+					cancel_trig = 0;
+					cancel_out = 1;
            // return 0;
-           goto stop1;
+					goto stop1;
 
-        }
+				}
 
-        elm_cst2_set_access (ELM_CST_ON_PURCHASE);
+				elm_cst2_set_access (ELM_CST_ON_PURCHASE);
 
-        time1 = times(NULL);
-    ret = mdr2_purchase_debt (CTX, amount, 0, 1, tsc_report, &epayment);
-        time2 = (times(NULL)-time1)*10;
-        memcpy(e_last_tsc.e1.tsc_cmd, epayment.e1.tsc_cmd, sizeof e_last_tsc.e1.tsc_cmd);
+				time1 = times(NULL);
+				ret = mdr2_purchase_debt (CTX, amount, 0, 1, tsc_report, &epayment);
+				time2 = (times(NULL)-time1)*10;
+				memcpy(e_last_tsc.e1.tsc_cmd, epayment.e1.tsc_cmd, sizeof e_last_tsc.e1.tsc_cmd);
 
-        if (ret == MDR_ERROR)
-        {            elm_debug (ELM_DEBUG_ERROR, "%s: purchase_debt LRC or "
-                                                 "I/O error \n", __func__);
+				if (ret == MDR_ERROR)
+					{            elm_debug (ELM_DEBUG_ERROR, "%s: purchase_debt LRC or "
+						"I/O error \n", __func__);
 //            elm_cst2_set_access (ELM_CST_EFAIL);
-            cst2_status = MDR_IO_ERROR;
-            goto stop;
-        }
+				cst2_status = MDR_IO_ERROR;
+				goto stop;
+			}
 
-        else if (ret == MDR_TIMEOUT)
-        {
-            elm_debug (ELM_DEBUG_WARNING, "%s: purchase_debt timeout\n", __func__);
-            elm_cst2_set_access (ELM_CST_EFAIL);
+			else if (ret == MDR_TIMEOUT)
+			{
+				elm_debug (ELM_DEBUG_WARNING, "%s: purchase_debt timeout\n", __func__);
+				elm_cst2_set_access (ELM_CST_EFAIL);
 
-           cst2_status = MDR_TIMEOUT;
-            goto stop;
-        }
+				cst2_status = MDR_TIMEOUT;
+				goto stop;
+			}
 
-        cst2_status = mdr_get_status (CTX);
+			cst2_status = mdr_get_status (CTX);
 
 
 //        if(out == 1){
@@ -553,359 +554,359 @@ int enco_purchase_debit(void)
 //        }
 //        printf("cancel = %i\n",cancel_trig);
 
-    } while (cst2_status == MDR_PURCHASE_TIMEOUT);
+		} while (cst2_status == MDR_PURCHASE_TIMEOUT);
 
 
-    elm_debug (ELM_DEBUG_INFO,"%s: cst2_status %x\n", __func__, cst2_status);
+		elm_debug (ELM_DEBUG_INFO,"%s: cst2_status %x\n", __func__, cst2_status);
 
-    switch (cst2_status)
-    {
-    case MDR_PURCHASE_DOUBLE:
-        LCD_I2C_CLEAR(&lcd_i2c);
-        LCD_I2C_OUTLET_NAME(&lcd_i2c);
-        lcd_i2c_puts(&lcd_i2c,0,2,"      TUNGGU           BEBERAPA DETIK   ");
-        sleep(3);
-        goto stop1;
-        break;
+		switch (cst2_status)
+		{
+			case MDR_PURCHASE_DOUBLE:
+			LCD_I2C_CLEAR(&lcd_i2c);
+			LCD_I2C_OUTLET_NAME(&lcd_i2c);
+			lcd_i2c_puts(&lcd_i2c,0,2,"      TUNGGU           BEBERAPA DETIK   ");
+			sleep(3);
+			goto stop1;
+			break;
 
-    case MDR_SAM_NOT_INIT:
-        elm_debug (ELM_DEBUG_INFO, "%s: sam init\n",__func__);
+			case MDR_SAM_NOT_INIT:
+			elm_debug (ELM_DEBUG_INFO, "%s: sam init\n",__func__);
         /// bank_sam_init();
         /// goto stop1;
-        goto stop;
-        break;
+			goto stop;
+			break;
 
-    case MDR_PURCHASE_UNCOMPLETED:
-        LCD_I2C_CLEAR(&lcd_i2c);
-        LCD_I2C_OUTLET_NAME(&lcd_i2c);
-        elm_debug (ELM_DEBUG_INFO, "%s: payment uncomplete\n",__func__);
-        lcd_i2c_puts(&lcd_i2c,0,1," PAYMENT UNCOMPLETE ");
-        goto stop1;
-        break;
+			case MDR_PURCHASE_UNCOMPLETED:
+			LCD_I2C_CLEAR(&lcd_i2c);
+			LCD_I2C_OUTLET_NAME(&lcd_i2c);
+			elm_debug (ELM_DEBUG_INFO, "%s: payment uncomplete\n",__func__);
+			lcd_i2c_puts(&lcd_i2c,0,1," PAYMENT UNCOMPLETE ");
+			goto stop1;
+			break;
 
-    case MDR_FAIL:
-        elm_cst2_set_access (ELM_CST_EFAIL);
-        break;
+			case MDR_FAIL:
+			elm_cst2_set_access (ELM_CST_EFAIL);
+			break;
 
 
-    case MDR_PURCHASE_MIFARE:
-        elm_cst2_set_access (ELM_CST_MIFARE);
-        elm_debug (ELM_DEBUG_INFO,"%s: Mifare detected..\n",__func__);
+			case MDR_PURCHASE_MIFARE:
+			elm_cst2_set_access (ELM_CST_MIFARE);
+			elm_debug (ELM_DEBUG_INFO,"%s: Mifare detected..\n",__func__);
         //g_cond_signal (tsc_cond);
-        break;
+			break;
 
         //saldo kurang
-    case MDR_PURCHASE_INSUFFICIENT:
+			case MDR_PURCHASE_INSUFFICIENT:
         /* ambil jumlah saldo jika pengecekan di bypass, jika
            pengecekan gagal, set status/response mejadi gagal */
-        ret = mdr_inq_balance (CTX,&balance, 1);
+			ret = mdr_inq_balance (CTX,&balance, 1);
 
-        if (ret == MDR_SUCCESS)
-        {
+			if (ret == MDR_SUCCESS)
+			{
 
-            cst_tsc->epayment_balance = balance;
-            elm_debug (ELM_DEBUG_INFO, "%s: cost: %lu, current "
-                                       "balance: %lu\n", __func__, amount, balance);
-        }else
-        {
-            status = tmp_status;
-            elm_debug (ELM_DEBUG_WARNING, "%s: inq_balance failed\n", __func__);
-        }
+				cst_tsc->epayment_balance = balance;
+				elm_debug (ELM_DEBUG_INFO, "%s: cost: %lu, current "
+					"balance: %lu\n", __func__, amount, balance);
+			}else
+			{
+				status = tmp_status;
+				elm_debug (ELM_DEBUG_WARNING, "%s: inq_balance failed\n", __func__);
+			}
 
-        LCD_I2C_CLEAR(&lcd_i2c);
-        LCD_I2C_OUTLET_NAME(&lcd_i2c);
-        lcd_i2c_puts(&lcd_i2c,0,2,"    SALDO KURANG    ");
-        goto stop1;
-        break;
+			LCD_I2C_CLEAR(&lcd_i2c);
+			LCD_I2C_OUTLET_NAME(&lcd_i2c);
+			lcd_i2c_puts(&lcd_i2c,0,2,"    SALDO KURANG    ");
+			goto stop1;
+			break;
 
         //sam init atau kartu tidak dikenal
-    case MDR_SAM_LENGTH:
+			case MDR_SAM_LENGTH:
         /* ambil jumlah saldo jika pengecekan di bypass, jika
            pengecekan gagal, set status/response mejadi gagal */
-        ret = mdr_inq_balance (CTX,&balance, 1);
+			ret = mdr_inq_balance (CTX,&balance, 1);
 
-        if (ret == MDR_SUCCESS)
-        {
-            cst_tsc->epayment_balance = balance;
-            elm_debug (ELM_DEBUG_INFO, "%s: cost: %lu, current "
-                                       "balance: %lu\n", __func__, amount, balance);
-        }
-        else
-        {
-            status = tmp_status;
-            elm_debug (ELM_DEBUG_WARNING, "%s: inq_balance failed\n", __func__);
-        }
+			if (ret == MDR_SUCCESS)
+			{
+				cst_tsc->epayment_balance = balance;
+				elm_debug (ELM_DEBUG_INFO, "%s: cost: %lu, current "
+					"balance: %lu\n", __func__, amount, balance);
+			}
+			else
+			{
+				status = tmp_status;
+				elm_debug (ELM_DEBUG_WARNING, "%s: inq_balance failed\n", __func__);
+			}
 
-        break;
-
-
-    case MDR_PURCHASE_GP1:
-    case MDR_PURCHASE_GP2:
-        ret = mdr2_get_report (CTX, tsc_report, &eid);
-        if (ret != MDR_SUCCESS)
-        {
-            elm_debug (ELM_DEBUG_WARNING, "%s: get report failed\n", __func__);
-            goto stop;
-        }
-
-        elm_cst2_set_access (ELM_CST_GP);
-
-        cst_tsc->epayment_status = STATUS_GP;
-        cst_tsc->time_ex = time (NULL);
-        cst_tsc->epayment_balance = get_last_balance (tsc_report);
-
-        convert_cmd2 (&epayment.e1,cst_tsc->epayment_cmd);
-        convert_tsc (tsc_report);
-        g_snprintf (cst_tsc->epayment_data, sizeof(cst_tsc->epayment_data),
-                    (char*) tsc_report);
-        elm_buffer_insert_epayment_data (cst_tsc);
-        elm_log_insert_epayment (cst_tsc);
-        break;
-
-    case MDR_SUCCESS:
-md_success:
-        cancel_count = 0;
-        ret = mdr2_get_report (CTX, tsc_report, &eid);
-
-        if (ret != MDR_SUCCESS)
-        {
-            elm_debug (ELM_DEBUG_WARNING, "%s: try get report\n", __func__);
-            g_usleep(G_USEC_PER_SEC >> 1);
-            ret = mdr2_get_report (CTX, tsc_report, &eid);
-            if (ret != MDR_SUCCESS)
-            {
-                elm_debug (ELM_DEBUG_WARNING, "%s: try get report failed\n", __func__);
-                cst2_status = MDR_LRC_ERROR;
-                elm_cst2_set_access (ELM_CST_EFAIL);
-                goto stop;
-            }
-            elm_debug (ELM_DEBUG_WARNING, "%s: try get report success\n", __func__);
-        }
-
-        if (eid == MANDIRI_CARD)
-        {
-            report_size = MANDIRI_REPORT_SZ;
-            tsc.type = ELM_TRANS_ETOLL_NORMAL;
-        }
-        else if (eid == BRI_JAVA_CARD)
-        {
-            report_size = BRI_REPORT_SZ;
-            tsc.type = ELM_TRANS_BRI_NORMAL;
-        }
-        else if (eid == BRI_DESFIRE_CARD)
-        {
-            report_size = BRI_REPORT_SZ+10;
-            tsc.type = ELM_TRANS_BRI_NORMAL;
-        }
-        else if (eid == BNI_CARD)
-        {
-            report_size = BNI_REPORT_SZ;
-            tsc.type = ELM_TRANS_BNI_NORMAL;
-        }
-        else if (eid == BCA_CARD)
-        {
-            report_size = BCA_REPORT_SZ;
-            tsc.type = ELM_TRANS_BCA_NORMAL;
-        }
-
-        cst_tsc->type= tsc.type;
-
-        ret = validate_tsc_data (tsc_report, report_size);
-
-        if (!ret && eid != BCA_CARD)
-        {
-            elm_debug (ELM_DEBUG_ERROR, "%s: malformed tsc report data\n", __func__);
-            elm_cst2_set_access (ELM_CST_EFAIL);
-            goto stop;
-        }
+			break;
 
 
-        memcpy (tsc_report_str, tsc_report, report_size);
-        *(tsc_report_str + report_size) = 0;
+			case MDR_PURCHASE_GP1:
+			case MDR_PURCHASE_GP2:
+			ret = mdr2_get_report (CTX, tsc_report, &eid);
+			if (ret != MDR_SUCCESS)
+			{
+				elm_debug (ELM_DEBUG_WARNING, "%s: get report failed\n", __func__);
+				goto stop;
+			}
 
-        elm_debug (ELM_DEBUG_INFO, "%s: tsc report: %s\n",
-                   __func__, (char*) tsc_report_str);
+			elm_cst2_set_access (ELM_CST_GP);
 
-        if (eid == MANDIRI_CARD)
-            convert_tsc (tsc_report_str);
-        else if (eid == BRI_JAVA_CARD)
-            bri_jc_convert_tsc (tsc_report_str);
-        else if (eid == BRI_DESFIRE_CARD)
-            bri_df_convert_tsc (tsc_report_str);
-        else if (eid == BNI_CARD)
-        {
-            memcpy (cst_tsc->epayment_data, tsc_report_str, report_size);
-            bni_convert_tsc (tsc_report_str);
-        }
-        else if (eid == BCA_CARD)
-        {
+			cst_tsc->epayment_status = STATUS_GP;
+			cst_tsc->time_ex = time (NULL);
+			cst_tsc->epayment_balance = get_last_balance (tsc_report);
 
-        }
+			convert_cmd2 (&epayment.e1,cst_tsc->epayment_cmd);
+			convert_tsc (tsc_report);
+			g_snprintf (cst_tsc->epayment_data, sizeof(cst_tsc->epayment_data),
+				(char*) tsc_report);
+			elm_buffer_insert_epayment_data (cst_tsc);
+			elm_log_insert_epayment (cst_tsc);
+			break;
 
-        convert_cmd2 (&epayment.e1,cst_tsc->epayment_cmd);
-        if (eid != BNI_CARD)
-            memcpy (cst_tsc->epayment_data, tsc_report_str, report_size);
-        *(cst_tsc->epayment_data + report_size) = 0;
+			case MDR_SUCCESS:
+			md_success:
+			cancel_count = 0;
+			ret = mdr2_get_report (CTX, tsc_report, &eid);
+
+			if (ret != MDR_SUCCESS)
+			{
+				elm_debug (ELM_DEBUG_WARNING, "%s: try get report\n", __func__);
+				g_usleep(G_USEC_PER_SEC >> 1);
+				ret = mdr2_get_report (CTX, tsc_report, &eid);
+				if (ret != MDR_SUCCESS)
+				{
+					elm_debug (ELM_DEBUG_WARNING, "%s: try get report failed\n", __func__);
+					cst2_status = MDR_LRC_ERROR;
+					elm_cst2_set_access (ELM_CST_EFAIL);
+					goto stop;
+				}
+				elm_debug (ELM_DEBUG_WARNING, "%s: try get report success\n", __func__);
+			}
+
+			if (eid == MANDIRI_CARD)
+			{
+				report_size = MANDIRI_REPORT_SZ;
+				tsc.type = ELM_TRANS_ETOLL_NORMAL;
+			}
+			else if (eid == BRI_JAVA_CARD)
+			{
+				report_size = BRI_REPORT_SZ;
+				tsc.type = ELM_TRANS_BRI_NORMAL;
+			}
+			else if (eid == BRI_DESFIRE_CARD)
+			{
+				report_size = BRI_REPORT_SZ+10;
+				tsc.type = ELM_TRANS_BRI_NORMAL;
+			}
+			else if (eid == BNI_CARD)
+			{
+				report_size = BNI_REPORT_SZ;
+				tsc.type = ELM_TRANS_BNI_NORMAL;
+			}
+			else if (eid == BCA_CARD)
+			{
+				report_size = BCA_REPORT_SZ;
+				tsc.type = ELM_TRANS_BCA_NORMAL;
+			}
+
+			cst_tsc->type= tsc.type;
+
+			ret = validate_tsc_data (tsc_report, report_size);
+
+			if (!ret && eid != BCA_CARD)
+			{
+				elm_debug (ELM_DEBUG_ERROR, "%s: malformed tsc report data\n", __func__);
+				elm_cst2_set_access (ELM_CST_EFAIL);
+				goto stop;
+			}
 
 
-        char str[17],str2[17];
-        unsigned long amt1,amt2;
-        if (eid == MANDIRI_CARD)
-        {
+			memcpy (tsc_report_str, tsc_report, report_size);
+			*(tsc_report_str + report_size) = 0;
+
+			elm_debug (ELM_DEBUG_INFO, "%s: tsc report: %s\n",
+				__func__, (char*) tsc_report_str);
+
+			if (eid == MANDIRI_CARD)
+				convert_tsc (tsc_report_str);
+			else if (eid == BRI_JAVA_CARD)
+				bri_jc_convert_tsc (tsc_report_str);
+			else if (eid == BRI_DESFIRE_CARD)
+				bri_df_convert_tsc (tsc_report_str);
+			else if (eid == BNI_CARD)
+			{
+				memcpy (cst_tsc->epayment_data, tsc_report_str, report_size);
+				bni_convert_tsc (tsc_report_str);
+			}
+			else if (eid == BCA_CARD)
+			{
+
+			}
+
+			convert_cmd2 (&epayment.e1,cst_tsc->epayment_cmd);
+			if (eid != BNI_CARD)
+				memcpy (cst_tsc->epayment_data, tsc_report_str, report_size);
+			*(cst_tsc->epayment_data + report_size) = 0;
+
+
+			char str[17],str2[17];
+			unsigned long amt1,amt2;
+			if (eid == MANDIRI_CARD)
+			{
             /* no kartu MANDIRI*/
-            memcpy(str, tsc_report_str, 17);
-            str[16]=0;
-            cst_tsc->card_id = strtoull(str, NULL, 10);
+				memcpy(str, tsc_report_str, 17);
+				str[16]=0;
+				cst_tsc->card_id = strtoull(str, NULL, 10);
 
-            memcpy(str, tsc_report_str+46, 8);
-            str[8]=0;
-            epayment.e1.tsc_amount = strtoul(str, NULL, 10);
+				memcpy(str, tsc_report_str+46, 8);
+				str[8]=0;
+				epayment.e1.tsc_amount = strtoul(str, NULL, 10);
 
             /* saldo MANDIRI*/
-            memcpy(str, tsc_report_str+54, 8);
-            str[8]=0;
-            cst_tsc->epayment_balance = strtoul(str, NULL, 10);
+				memcpy(str, tsc_report_str+54, 8);
+				str[8]=0;
+				cst_tsc->epayment_balance = strtoul(str, NULL, 10);
             /* */
-            g_snprintf (e_num, sizeof e_num, (char*)tsc_report_str);
-        }
-        else if (eid == BRI_JAVA_CARD)
-        {
+				g_snprintf (e_num, sizeof e_num, (char*)tsc_report_str);
+			}
+			else if (eid == BRI_JAVA_CARD)
+			{
             /* no kartu BRI JAVA*/
-            bin_to_ascii(tsc_report_str, str, 17);
-            cst_tsc->card_id = strtoull(str, NULL, 10);
+				bin_to_ascii(tsc_report_str, str, 17);
+				cst_tsc->card_id = strtoull(str, NULL, 10);
 
-            memcpy(str, tsc_report_str+28, 8);
-            str[8]=0;
-            epayment.e1.tsc_amount = strtoul(str, NULL, 10);
+				memcpy(str, tsc_report_str+28, 8);
+				str[8]=0;
+				epayment.e1.tsc_amount = strtoul(str, NULL, 10);
 
             /* saldo BRI JAVA*/
-            memcpy(str, tsc_report_str+48, 8);
-            str[8]=0;
-            cst_tsc->epayment_balance = strtoul(str, NULL, 10);
-        }
-        else if (eid == BRI_DESFIRE_CARD)
-        {
+				memcpy(str, tsc_report_str+48, 8);
+				str[8]=0;
+				cst_tsc->epayment_balance = strtoul(str, NULL, 10);
+			}
+			else if (eid == BRI_DESFIRE_CARD)
+			{
             /* no kartu BRI DESFIRE*/
-            bin_to_ascii(tsc_report_str, str, 17);
-            cst_tsc->card_id = strtoull(str, NULL, 10);
+				bin_to_ascii(tsc_report_str, str, 17);
+				cst_tsc->card_id = strtoull(str, NULL, 10);
 
-            memcpy(str, tsc_report_str+28, 8);
-            str[8]=0;
-            epayment.e1.tsc_amount = strtoul(str, NULL, 10);
+				memcpy(str, tsc_report_str+28, 8);
+				str[8]=0;
+				epayment.e1.tsc_amount = strtoul(str, NULL, 10);
 
             /* saldo BRI DESFIRE*/
-            memcpy(str, tsc_report_str+79, 8);
-            str[8]=0;
-            cst_tsc->epayment_balance = strtoul(str, NULL, 10);
-        }
-        else if (eid == BNI_CARD)
-        {
+				memcpy(str, tsc_report_str+79, 8);
+				str[8]=0;
+				cst_tsc->epayment_balance = strtoul(str, NULL, 10);
+			}
+			else if (eid == BNI_CARD)
+			{
             /* no kartu */
-            memcpy(str, tsc_report_str+3, 17);
-            str[16]=0;
-            cst_tsc->card_id = strtoull(str, NULL, 10);
+				memcpy(str, tsc_report_str+3, 17);
+				str[16]=0;
+				cst_tsc->card_id = strtoull(str, NULL, 10);
 
-            memcpy(str, tsc_report_str+45, 6);
-            memcpy(str2, tsc_report_str+51, 6);
-            str[6]=0;
-            str2[6]=0;
+				memcpy(str, tsc_report_str+45, 6);
+				memcpy(str2, tsc_report_str+51, 6);
+				str[6]=0;
+				str2[6]=0;
 
             /* saldo */
-            amt1 = strtoul(str, NULL, 10);
-            amt2 = strtoul(str2, NULL, 10);
-            epayment.e1.tsc_amount = amt1 - amt2;
-            cst_tsc->epayment_balance = amt2;
-        }
-        else if (eid == BCA_CARD)
-        {
+				amt1 = strtoul(str, NULL, 10);
+				amt2 = strtoul(str2, NULL, 10);
+				epayment.e1.tsc_amount = amt1 - amt2;
+				cst_tsc->epayment_balance = amt2;
+			}
+			else if (eid == BCA_CARD)
+			{
             /* no kartu */
-            memcpy(str, tsc_report_str+4, 17);
-            str[16]=0;
-            cst_tsc->card_id = strtoull(str, NULL, 10);
+				memcpy(str, tsc_report_str+4, 17);
+				str[16]=0;
+				cst_tsc->card_id = strtoull(str, NULL, 10);
 
-            memcpy(str, tsc_report_str+50, 10);
-            str[10]=0;
-            epayment.e1.tsc_amount = strtoul(str, NULL, 10);
+				memcpy(str, tsc_report_str+50, 10);
+				str[10]=0;
+				epayment.e1.tsc_amount = strtoul(str, NULL, 10);
 
-            memcpy(str, tsc_report_str+40, 10);
-            str[10]=0;
-            cst_tsc->epayment_balance = strtoul(str, NULL, 10);
-        }
+				memcpy(str, tsc_report_str+40, 10);
+				str[10]=0;
+				cst_tsc->epayment_balance = strtoul(str, NULL, 10);
+			}
 
-        if (!pch_started)
-            pch_started = TRUE;
+			if (!pch_started)
+				pch_started = TRUE;
 
-        e_last_tsc.card_num = cst_tsc->card_id;
-        e_last_tsc.e1.last_balance = cst_tsc->epayment_balance;
-        e_last_tsc.eid = eid;
+			e_last_tsc.card_num = cst_tsc->card_id;
+			e_last_tsc.e1.last_balance = cst_tsc->epayment_balance;
+			e_last_tsc.eid = eid;
 
-        switch(e_last_tsc.eid)
-        {
-        case 0x30:
-            sprintf(label,"MANDIRI             %016llu    SALDO: Rp. %lu", e_last_tsc.card_num, e_last_tsc.e1.last_balance);
-            break;
-        case 0x32:
-            sprintf(label,"BRI                 %016llu    SALDO: Rp. %lu", e_last_tsc.card_num, e_last_tsc.e1.last_balance);
-            break;
-        case 0x33:
-            sprintf(label,"BNI                 %016llu    SALDO: Rp. %lu", e_last_tsc.card_num, e_last_tsc.e1.last_balance);
-            break;
-        case 0x34:
-            sprintf(label,"BCA                 %016llu    SALDO: Rp. %lu", e_last_tsc.card_num, e_last_tsc.e1.last_balance);
-            break;
-        }
+			switch(e_last_tsc.eid)
+			{
+				case 0x30:
+				sprintf(label,"MANDIRI             %016llu    SALDO: Rp. %lu", e_last_tsc.card_num, e_last_tsc.e1.last_balance);
+				break;
+				case 0x32:
+				sprintf(label,"BRI                 %016llu    SALDO: Rp. %lu", e_last_tsc.card_num, e_last_tsc.e1.last_balance);
+				break;
+				case 0x33:
+				sprintf(label,"BNI                 %016llu    SALDO: Rp. %lu", e_last_tsc.card_num, e_last_tsc.e1.last_balance);
+				break;
+				case 0x34:
+				sprintf(label,"BCA                 %016llu    SALDO: Rp. %lu", e_last_tsc.card_num, e_last_tsc.e1.last_balance);
+				break;
+			}
 
-        LCD_I2C_CLEAR(&lcd_i2c);
-        LCD_I2C_OUTLET_NAME(&lcd_i2c);
-        lcd_i2c_puts(&lcd_i2c,0,1,label);
+			LCD_I2C_CLEAR(&lcd_i2c);
+			LCD_I2C_OUTLET_NAME(&lcd_i2c);
+			lcd_i2c_puts(&lcd_i2c,0,1,label);
 
-        optocoupler();
+			optocoupler();
 
-        elm_debug (ELM_DEBUG_INFO, "%s: e-last saved  %llu  %lu %x %lu \n",
-                   __func__,
-                   e_last_tsc.card_num,
-                   e_last_tsc.e1.last_balance,
-                   e_last_tsc.eid, time2);
+			elm_debug (ELM_DEBUG_INFO, "%s: e-last saved  %llu  %lu %x %lu \n",
+				__func__,
+				e_last_tsc.card_num,
+				e_last_tsc.e1.last_balance,
+				e_last_tsc.eid, time2);
 
 
 
-        elm_cst2_set_access (ELM_CST_ESUCCESS);
+			elm_cst2_set_access (ELM_CST_ESUCCESS);
 
-        if (amount == epayment.e1.tsc_amount)
-        {
-            if (eid == MANDIRI_CARD)
-                cst_tsc->epayment_status = STATUS_NORMAL;
-            else if (eid == BRI_JAVA_CARD)
-                cst_tsc->epayment_status = STATUS_NORMAL_BRI_JC;
-            else if (eid == BRI_DESFIRE_CARD)
-                cst_tsc->epayment_status = STATUS_NORMAL_BRI_DF;
-            else if (eid == BNI_CARD)
-                cst_tsc->epayment_status = STATUS_NORMAL_BNI;
-            else if (eid == BCA_CARD)
-                cst_tsc->epayment_status = STATUS_NORMAL_BCA;
-        }
-        else
-        {
-            if (eid == MANDIRI_CARD)
-                cst_tsc->epayment_status = STATUS_DIFF;
-            else if (eid == BRI_JAVA_CARD)
-                cst_tsc->epayment_status = STATUS_DIFF_BRI_JC;
-            else if (eid == BRI_DESFIRE_CARD)
-                cst_tsc->epayment_status = STATUS_DIFF_BRI_DF;
-            else if (eid == BNI_CARD)
-                cst_tsc->epayment_status = STATUS_DIFF_BNI;
-            else if (eid == BCA_CARD)
-                cst_tsc->epayment_status = STATUS_DIFF_BCA;
+			if (amount == epayment.e1.tsc_amount)
+			{
+				if (eid == MANDIRI_CARD)
+					cst_tsc->epayment_status = STATUS_NORMAL;
+				else if (eid == BRI_JAVA_CARD)
+					cst_tsc->epayment_status = STATUS_NORMAL_BRI_JC;
+				else if (eid == BRI_DESFIRE_CARD)
+					cst_tsc->epayment_status = STATUS_NORMAL_BRI_DF;
+				else if (eid == BNI_CARD)
+					cst_tsc->epayment_status = STATUS_NORMAL_BNI;
+				else if (eid == BCA_CARD)
+					cst_tsc->epayment_status = STATUS_NORMAL_BCA;
+			}
+			else
+			{
+				if (eid == MANDIRI_CARD)
+					cst_tsc->epayment_status = STATUS_DIFF;
+				else if (eid == BRI_JAVA_CARD)
+					cst_tsc->epayment_status = STATUS_DIFF_BRI_JC;
+				else if (eid == BRI_DESFIRE_CARD)
+					cst_tsc->epayment_status = STATUS_DIFF_BRI_DF;
+				else if (eid == BNI_CARD)
+					cst_tsc->epayment_status = STATUS_DIFF_BNI;
+				else if (eid == BCA_CARD)
+					cst_tsc->epayment_status = STATUS_DIFF_BCA;
 
-            elm_debug (ELM_DEBUG_WARNING, "%s: invalid purchased "
-                                          "amount report, request: %lu, report: %lu\n",
-                       __func__, amount, epayment.e1.tsc_amount);
-        }
+				elm_debug (ELM_DEBUG_WARNING, "%s: invalid purchased "
+					"amount report, request: %lu, report: %lu\n",
+					__func__, amount, epayment.e1.tsc_amount);
+			}
         //           g_cond_signal (tsc_cond);
 
 
-        cst_tsc->time_ex = time (NULL);
-        cst_tsc->cycle = time (NULL);
+			cst_tsc->time_ex = time (NULL);
+			cst_tsc->cycle = time (NULL);
 
 
         ///        if (cst_tsc->epayment_status == STATUS_IR ||
@@ -920,372 +921,495 @@ md_success:
         ///         }
         ///        else
         ///          {
-        etime_ex = cst_tsc->time_ex;
-        elm_buffer_insert_epayment_data2 (cst_tsc);
-        elm_log_insert_epayment (cst_tsc);
+			etime_ex = cst_tsc->time_ex;
+			elm_buffer_insert_epayment_data2 (cst_tsc);
+			elm_log_insert_epayment (cst_tsc);
         ///          }
-        int resi = elm_data.sn;
+			int resi = elm_data.sn;
 
-        setting_sn_inc();
-        goto stop1;
-        break;
+			setting_sn_inc();
+			goto stop1;
+			break;
 
-    default:
+			default:
 
-        break;
+			break;
 
-    }
+		}
 
-stop:
+		stop:
 
-    if (!(&cst2_status==MDR_SUCCESS))
-    {
-        con=enco_get_cardnumber(READ_ETOLL_NUM,&cardnum,&cid);
-        if(con)
-        {
-            switch (cid)
-            {
+		if (!(&cst2_status==MDR_SUCCESS))
+		{
+			con=enco_get_cardnumber(READ_ETOLL_NUM,&cardnum,&cid);
+			if(con)
+			{
+				switch (cid)
+				{
             case 0x39: //MIFARE
-                if(find_card_member_uid(cardnum))
-                {
+            // if(data_paket == 5){
+            // 	sprintf(uid,"TOP_UP=%llu",cardnum);
+            // 	sprintf(print_saldo,"Saldo\t : Rp. %d\n",membercard[indeks][2]);
+            // 	sprintf(nama,"Nama\t : %d\n", membercard[indeks][2]);
+            // 	sprintf(nominal,"Nominal\t : %d", membercard[indeks][2]);
+            	
+            //             //puts(data_paket);
+            // 	info = uid;
+            // 	nama_print = nama;
+            // 	nominal_print = nominal;
+            // 	saldo_print = print_saldo;
+            // 	send_info();
+            // 	printer();
+            // 	// sleep(4);
+            // 	// printer_topup();
+            // 	cancel_trig = 0;
+            // 	cancel_out = 1;
+            // 	get_out = 1;
+            	
+            // 	break;
+            // }
+
+            if(find_card_member_uid(cardnum))
+            {
 //                    sprintf(cst_tsc->epayment_data,"%llu",cardnum);
 
-                    switch(data_paket)
-                    {
-                    case 1:
-                        amount = elm_cost.pkt2;
-                        cst_tsc->tarif = amount;
-                        sprintf(cst_tsc->epayment_data,"%llu",cardnum);
-                        cst_tsc->paket=2;
-                        printf("PAKET1\nTARIF : %d\n",amount);
-                        sprintf(nama_paket,"Tarif : CUCI SETRIKA\n");
-                        
-                        
+            	switch(data_paket)
+            	{
+            		case 1:
+            		amount = elm_cost.pkt2;
+            		cst_tsc->tarif = amount;
+            		sprintf(cst_tsc->epayment_data,"%llu",cardnum);
+            		cst_tsc->paket=2;
+            		printf("PAKET1\nTARIF : %d\n",amount);
+            		sprintf(nama_paket,"Paket : CUCI SETRIKA\n");
 
-                        break;
-                    case 2:
-                        amount = elm_cost.pkt3;
-                        cst_tsc->tarif = amount;
-                        sprintf(cst_tsc->epayment_data,"%llu",cardnum);
-                        cst_tsc->paket=3;
-                        printf("PAKET2\nTARIF : %d\n", amount);
+
+
+            		break;
+            		case 2:
+            		amount = elm_cost.pkt3;
+            		cst_tsc->tarif = amount;
+            		sprintf(cst_tsc->epayment_data,"%llu",cardnum);
+            		cst_tsc->paket=3;
+            		printf("PAKET2\nTARIF : %d\n", amount);
                         // nama_paket = "CUCI KERING";
                         // sprintf("%s",nama_paket);
-                        sprintf(nama_paket,"Tarif : CUCI LIPAT\n");
+            		sprintf(nama_paket,"Paket : CUCI LIPAT\n");
 
-                        break;
-                    case 3:
-                        amount = elm_cost.pkt4;
-                        cst_tsc->tarif = amount;
-                        sprintf(cst_tsc->epayment_data,"%llu",cardnum);
-                        cst_tsc->paket=4;
-                        printf("PAKET3\nTARIF : %d\n", amount);
+            		break;
+            		case 3:
+            		amount = elm_cost.pkt4;
+            		cst_tsc->tarif = amount;
+            		sprintf(cst_tsc->epayment_data,"%llu",cardnum);
+            		cst_tsc->paket=4;
+            		printf("PAKET3\nTARIF : %d\n", amount);
                         // nama_paket = "CUCI LIPAT";
                         // sprintf(nama_paket[1000],"CUCI KERING");
-                        sprintf(nama_paket,"Tarif : CUCI KERING\n");
-                        break;
-                    }
-                    membercard[indeks][2]=membercard[indeks][2]-amount;
-                    cst_tsc->epayment_balance = membercard[indeks][2];
+            		sprintf(nama_paket,"Paket : CUCI KERING\n");
+            		break;
+            	}
+            	membercard[indeks][2]=membercard[indeks][2]-amount;
+            	cst_tsc->epayment_balance = membercard[indeks][2];
 
 
 
-                    if(cst_tsc->epayment_balance<0)
-                    {
+            	if(cst_tsc->epayment_balance<0)
+            	{
 
-                        cancel_trig = 0;
-                        membercard[indeks][2]=membercard[indeks][2]+amount;
-                        sprintf(label,"\t    TARIF \t : %d\n\t    MEMBER CARD  : %016llu\n\t    SALDO \t : %d\n\n\n\t    MAAF, SALDO ANDA TIDAK MENCUKUPI",amount,membercard[indeks][1],membercard[indeks][2]);
+            		cancel_trig = 0;
+            		membercard[indeks][2]=membercard[indeks][2]+amount;
+            		sprintf(label,"TARIF\t\t: %d\nMEMBER CARD\t: %016llu\nSALDO\t\t: %d\n\n\nMAAF, SALDO ANDA TIDAK MENCUKUPI",amount,membercard[indeks][1],membercard[indeks][2]);
 
-                        LCD_I2C_CLEAR(&lcd_i2c);
-                        LCD_I2C_OUTLET_NAME(&lcd_i2c);
-                        lcd_i2c_puts(&lcd_i2c,0,1,label);
+            		LCD_I2C_CLEAR(&lcd_i2c);
+            		LCD_I2C_OUTLET_NAME(&lcd_i2c);
+            		lcd_i2c_puts(&lcd_i2c,0,1,label);
 
 //                        cst_tsc->epayment_balance=membercard[indeks][2];
 
 
-                        info = label;
-                        send_info();
-                        cancel_trig = 0;
-                        cancel_out = 1;
-                        get_out = 1;
+            		info = label;
+            		send_info();
+            		cancel_trig = 0;
+            		cancel_out = 1;
+            		get_out = 1;
 
 //                        tariff = cost;
 
-                    }else
-                    {
-                        tsc.type = ELM_TRANS_MEMCARD_NORMAL;
-                        cst_tsc->type= tsc.type;
+            	}else
+            	{
+            		tsc.type = ELM_TRANS_MEMCARD_NORMAL;
+            		cst_tsc->type= tsc.type;
 
                         // cancel_trig = 0;
 
- 
-                        puts("MASSUUUK\n");
-                        optocoupler();
-                        sprintf(label,"\t    TARIF \t : %d\n\t    MEMBER CARD  : %016llu\n\t    SALDO \t : %d\n\n\n\t          TRANSAKSI BERHASIL",amount,membercard[indeks][1],membercard[indeks][2]);
-//                        sprintf(info_print,"TARIF : %d\nMEMBER CARD : %016llu\nSALDO : %d\n",amount,membercard[indeks][1],membercard[indeks][2]);
-//                        sprintf(print,"TGL/JAM : %d-%d-%d / %d:%d:%d\nRESI : %i\nSALDO : %d\n",tm.tm_day + tm.tm_mon + 1,tm.tm_year + 1900, tm.tm_hour, tm.tm_min, tm.tm_sec, resi, membercard[indeks][2]);
-                        sprintf(print,"%02d-%02d-%04d              %02d:%02d:%02d\n",tm.tm_mday, tm.tm_mon+1, tm.tm_year+1900, tm.tm_hour, tm.tm_min, tm.tm_sec);
-                        sprintf(print_resi,"No. Transaksi  : %d\n",elm_data.sn);
+
+            		puts("MASSUUUK\n");
+            		optocoupler();
+            		sprintf(label,"TARIF\t\t: %d\nMEMBER CARD\t: %016llu\nSALDO\t\t: %d\n\n\nTRANSAKSI BERHASIL",amount,membercard[indeks][1],membercard[indeks][2]);
+                       // sprintf(info_print,"TARIF : %d\nMEMBER CARD : %016llu\nSALDO : %d\n",amount,membercard[indeks][1],membercard[indeks][2]);
+                       // sprintf(print,"TGL/JAM : %d-%d-%d / %d:%d:%d\nRESI : %i\nSALDO : %d\n",tm.tm_day + tm.tm_mon + 1,tm.tm_year + 1900, tm.tm_hour, tm.tm_min, tm.tm_sec, resi, membercard[indeks][2]);
+            		sprintf(print,"%02d-%02d-%04d              %02d:%02d:%02d\n",tm.tm_mday, tm.tm_mon+1, tm.tm_year+1900, tm.tm_hour, tm.tm_min, tm.tm_sec);
+            		sprintf(print_resi,"No. Transaksi  : %d\n",elm_data.sn);
 //                        sprintf(print_paket,"Paket\t : %c\n", nama_paket);
-                        sprintf(print_tarif,"Tarif\t : Rp. %d\n",amount);
-                        sprintf(print_saldo,"Saldo\t : Rp. %d\n",membercard[indeks][2]);
-                        //sdfgg
+            		sprintf(print_tarif,"Tarif\t : Rp. 50.000\n");
+            		sprintf(print_saldo,"Saldo\t : Rp. %d\n",membercard[indeks][2]);
+            	sprintf(nama,"Nama\t : %d\n", membercard[indeks][2]);
+            		
+            		sprintf(telp,"No. Telp\t : %c\n", membercard[indeks][2]);
 
-                        LCD_I2C_CLEAR(&lcd_i2c);
-                        LCD_I2C_OUTLET_NAME(&lcd_i2c);
-                        lcd_i2c_puts(&lcd_i2c,0,1,label);
+            		LCD_I2C_CLEAR(&lcd_i2c);
+            		LCD_I2C_OUTLET_NAME(&lcd_i2c);
+            		lcd_i2c_puts(&lcd_i2c,0,1,label);
 
-                        cst_tsc->cycle = time (NULL);
-                        convert_cmd2 (&epayment.e1,cst_tsc->epayment_cmd);
-                        cst_tsc->time_ex = time (NULL);
-
-                        card_member_update(cardnum,cst_tsc->epayment_balance);
-                        elm_buffer_insert_epayment_data2 (cst_tsc);
-                        setting_sn_inc();
-                        info = label;
-                        info_print = print;
-                        resi_print = print_resi;
+            		cst_tsc->cycle = time (NULL);
+            		convert_cmd2 (&epayment.e1,cst_tsc->epayment_cmd);
+            		cst_tsc->time_ex = time (NULL);
+            		printf("E1 %d %llu \n",cst_tsc->epayment_balance, cardnum);
+            		card_member_update(cardnum,cst_tsc->epayment_balance);
+            		printf("E2 %d %llu \n",cst_tsc->epayment_balance, cardnum);
+            		elm_buffer_insert_epayment_data2 (cst_tsc);
+            		setting_sn_inc();
+            		info = label;
+            		date_print = print;
+            		resi_print = print_resi;
 //                        paket_print = print_paket;
-                        tarif_print = print_tarif;
-                        saldo_print = print_saldo;
-                        send_info();
-                        cancel_trig = 0;
-                        cancel_out = 1;
-                        get_out = 1;
-                       printer();
-                       sleep(4);
-                       printer();
-                        
+            		tarif_print = print_tarif;
+            		saldo_print = print_saldo;
+            		    	nama_print = nama;
+            	nominal_print = nominal;
+            	saldo_print = print_saldo;
+            		
+            		telp_print = telp;
+                               // puts(data_paket);
+            		info = label;
+            		date_print = print;
+            		resi_print = print_resi;
+//                        paket_print = print_paket;
+            		
+            		
+            		nama_print = nama;
+            		
+            		if(data_paket == 4){
+            			sprintf(uid,"ADD_MEMBER=%llu",cardnum);
+                        //puts(data_paket);
+            			info = uid;
+            			send_info();
+            			data_paket = 9;
+            		}else if(data_paket == 5){
+            			sprintf(uid,"TOP_UP=%llu",cardnum);
+            			sprintf(print_saldo,"Saldo\t : Rp. %d\n",membercard[indeks][2]);
+            			saldo_print = print_saldo;
+                        //puts(data_paket);
+            			info = uid;
+            			send_info();
+            			printer_topup();
+            			
+            			data_paket = 9;
+            			break;
+            		}else if(data_paket == 1 || data_paket == 2 || data_paket == 3){
+            			send_info();
+            			printer();
+            			sleep(4);
+            			printer();
+            		}
+            		cancel_trig = 0;
+            		cancel_out = 1;
+            		get_out = 1;
+
+
 
 //                        tariff = cost;
 //                        info = label;
 
-                    }
+            	}
 
 
-                }else if (membercard[0][0]==0)
-                {
-                    LCD_I2C_CLEAR(&lcd_i2c);
-                    LCD_I2C_OUTLET_NAME(&lcd_i2c);
-                    lcd_i2c_puts(&lcd_i2c,0,2,"KONEKSI GAGAL");
-                    sprintf(label,"\tKONEKSI GAGAL, SILAHKAN ULANGI LAGI!");
-                    info = label;
-                    send_info();
-                    cancel_trig = 0;
-                        cancel_out = 1;
-                    get_out = 1;
+            }else if (membercard[0][0]==0)
+            {
+            	LCD_I2C_CLEAR(&lcd_i2c);
+            	LCD_I2C_OUTLET_NAME(&lcd_i2c);
+            	lcd_i2c_puts(&lcd_i2c,0,2,"KONEKSI GAGAL");
+            	sprintf(label,"KONEKSI GAGAL");
+            	info = label;
+            	send_info();
+            	cancel_trig = 0;
+            	cancel_out = 1;
+            	get_out = 1;
 
-                }else
-                {
-                    LCD_I2C_CLEAR(&lcd_i2c);
-                    LCD_I2C_OUTLET_NAME(&lcd_i2c);
-                    lcd_i2c_puts(&lcd_i2c,0,2,"KARTU TIDAK DIKENAL");
-                    sprintf(label,"KARTU TIDAK DIKENAL");
-                    info = label;
-                    send_info();
-                    cancel_trig = 0;
-                        cancel_out = 1;
-                    get_out = 1;
-                    
-                }
-                break;
-            default:
-                if(!(&cst2_status==MDR_PURCHASE_TIMEOUT))
-                {
-                    LCD_I2C_CLEAR(&lcd_i2c);
-                    LCD_I2C_OUTLET_NAME(&lcd_i2c);
-                    lcd_i2c_puts(&lcd_i2c,0,2,"KARTU TIDAK DIKENAL");
-                    sprintf(label,"KARTU TIDAK DIKENAL");
-                    puts("TIMEOUT");
-                    info = label;
-                    send_info();
-                    get_out = 1;
-                    cancel_trig = 0;
-                        cancel_out = 1;
-                    printf("ENTER\n");
-                }
-                break;
+            }else
+            {
+            	LCD_I2C_CLEAR(&lcd_i2c);
+            	LCD_I2C_OUTLET_NAME(&lcd_i2c);
+            	lcd_i2c_puts(&lcd_i2c,0,2,"KARTU TIDAK DIKENAL");
+            	sprintf(label,"KARTU TIDAK DIKENAL");
+
+	                       // puts(data_paket);
+            	if(data_paket == 4){
+            		sprintf(uid,"ADD_MEMBER=%llu",cardnum);
+                        //puts(data_paket);
+            		info = uid;
+            		send_info();
+            		
+
+
+            	}else if(data_paket == 5){
+            		sprintf(uid,"TOP_UP=%llu",cardnum);
+            		sprintf(print_saldo,"Saldo\t : Rp. %d\n",membercard[indeks][2]);
+            		saldo_print = print_saldo;
+                        puts("KARTU GK DIKENAL");
+            		info = uid;
+            		send_info();
+            		printer_topup();
+            	
+            		
+            			break;
+            	}else if(data_paket == 1 || data_paket == 2 || data_paket == 3){
+            		info = label;
+            		send_info();
+            	}
+            	cancel_trig = 0;
+            	cancel_out = 1;
+            	get_out = 1;
+
+                    // }
             }
-        }
-        else
-        {
-            LCD_I2C_CLEAR(&lcd_i2c);
-            LCD_I2C_OUTLET_NAME(&lcd_i2c);
-            lcd_i2c_puts(&lcd_i2c,0,2,"KARTU TIDAK DIKENAL");
-            sprintf(label,"KARTU TIDAK DIKENAL");
-            puts("TIMEOUT2");
-            info = label;
-            send_info();
-            cancel_trig = 0;
-            cancel_out = 1;
-            get_out = 1;
+            break;
+            default:
+            if(!(&cst2_status==MDR_PURCHASE_TIMEOUT))
+            {
+            	LCD_I2C_CLEAR(&lcd_i2c);
+            	LCD_I2C_OUTLET_NAME(&lcd_i2c);
+            	lcd_i2c_puts(&lcd_i2c,0,2,"KARTU TIDAK DIKENAL");
+            	sprintf(label,"KARTU TIDAK DIKENAL");
+            	puts("TIMEOUT");
 
+            	if(data_paket == 4){
+            		sprintf(uid,"ADD_MEMBER=%llu",cardnum);
+                        //puts(data_paket);
+            		info = uid;
+            		send_info();
+            		
+
+
+            	}else if(data_paket == 5){
+            		sprintf(uid,"TOP_UP=%llu",cardnum);
+            		sprintf(print_saldo,"Saldo\t : Rp. %d\n",membercard[indeks][2]);
+            		saldo_print = print_saldo;
+                        //puts(data_paket);
+            		info = uid;
+            		send_info();
+            		printer_topup();
+            		sleep(4);
+            		printer_topup();
+            		
+            			break;
+            	}
+            	else if(data_paket == 1 || data_paket == 2 || data_paket == 3){
+
+                               // puts(data_paket);
+            		info = label;
+            		send_info();
+            		data_paket = 9;
+            	}
+
+
+	//		info = label;
+        //            	send_info();
+
+
+            	cancel_trig = 0;
+            	cancel_out = 1;
+            	get_out = 1;
+            	printf("ENTER\n");
+            }
+            break;
         }
+    }
+    else
+    {
+    	LCD_I2C_CLEAR(&lcd_i2c);
+    	LCD_I2C_OUTLET_NAME(&lcd_i2c);
+    	lcd_i2c_puts(&lcd_i2c,0,2,"KARTU TIDAK DIKENAL");
+    	sprintf(label,"KARTU TIDAK DIKENAL");
+    	puts("TIMEOUT2");
+
+                               // puts(data_paket);
+    	info = label;
+    	send_info();
+    	data_paket = 9;
+
+
+//            info = label;
+//            send_info();
+    	cancel_trig = 0;
+    	cancel_out = 1;
+    	get_out = 1;
 
     }
 
-stop1:
-    time3 = (times(NULL)-time1)*10;
-    elm_debug (ELM_DEBUG_INFO, "%s: Time Deduct %lu %d \n", __func__, time2,indeks);
-    elm_debug (ELM_DEBUG_INFO, "%s: Time Debit Purchase %lu\n", __func__, time3);
-    elm_debug (ELM_DEBUG_INFO, "%s: work end\n", __func__);
+}
 
-    return &cst2_status;
+stop1:
+time3 = (times(NULL)-time1)*10;
+elm_debug (ELM_DEBUG_INFO, "%s: Time Deduct %lu %d \n", __func__, time2,indeks);
+elm_debug (ELM_DEBUG_INFO, "%s: Time Debit Purchase %lu\n", __func__, time3);
+elm_debug (ELM_DEBUG_INFO, "%s: work end\n", __func__);
+
+return &cst2_status;
 }
 
 gboolean enco_get_cardnumber(char cmd, unsigned long long* num, char* id)
 {
-    int ret;
-    unsigned long long cnum;
-    char idc;
+int ret;
+unsigned long long cnum;
+char idc;
 
-    ret = mdr2_get_cardnumber(CTX,cmd,1,&cnum,&idc);
-    if (ret != MDR_SUCCESS)
-    {
+ret = mdr2_get_cardnumber(CTX,cmd,1,&cnum,&idc);
+if (ret != MDR_SUCCESS)
+{
 
-        cst2_status = mdr_get_status(CTX);
-        if (cst2_status == MDR_PURCHASE_MIFARE)
-        {
+	cst2_status = mdr_get_status(CTX);
+	if (cst2_status == MDR_PURCHASE_MIFARE)
+	{
             //*id = MIFARE_CARD;
             //elm_debug (ELM_DEBUG_INFO, "%s: Mifare detected\n",__func__);
             //return TRUE;
-        }
-        else if (cst2_status == MDR_SAM_NOT_INIT)
-        {
-            elm_debug (ELM_DEBUG_INFO, "%s: sam init\n",__func__);
+	}
+	else if (cst2_status == MDR_SAM_NOT_INIT)
+	{
+		elm_debug (ELM_DEBUG_INFO, "%s: sam init\n",__func__);
             ///   bank_sam_init();
-        }
-        return FALSE;
-    }
-    *num = cnum;
-    *id = idc;
+	}
+	return FALSE;
+}
+*num = cnum;
+*id = idc;
 
-    elm_debug (ELM_DEBUG_INFO, "%s: %x %llu\n",__func__, idc, cnum);
-    return TRUE;
+elm_debug (ELM_DEBUG_INFO, "%s: %x %llu\n",__func__, idc, cnum);
+return TRUE;
 }
 
 
 int enco_get_balance(void)
 {
 
-    int valid_ans=45;
-    int ret;
-    size_t bytes = 0;
-    int cmd_len = sizeof(commandGetBalance);
-    unsigned char ans[36];
-    int iPrint = 0;
-    unsigned char status[4];
+int valid_ans=45;
+int ret;
+size_t bytes = 0;
+int cmd_len = sizeof(commandGetBalance);
+unsigned char ans[36];
+int iPrint = 0;
+unsigned char status[4];
 
-    while (bytes < cmd_len)
-    {
-        ret = write(enco.connfd, commandGetBalance+bytes, cmd_len-bytes);
-        if (ret == -1) {
-        }
-        bytes += ret;
-    }
+while (bytes < cmd_len)
+{
+	ret = write(enco.connfd, commandGetBalance+bytes, cmd_len-bytes);
+	if (ret == -1) {
+	}
+	bytes += ret;
+}
 
-    ret = read(enco.connfd,ans, valid_ans);
-    if (ret == -1)
-    {
+ret = read(enco.connfd,ans, valid_ans);
+if (ret == -1)
+{
 
-    }
+}
 
-    printf("%s reply: ",__func__);
-    while(iPrint < ret)
-    {
-        printf("%02X ", ans[iPrint]);
-        iPrint++;
-    }
-    printf("\n");
+printf("%s reply: ",__func__);
+while(iPrint < ret)
+{
+	printf("%02X ", ans[iPrint]);
+	iPrint++;
+}
+printf("\n");
 
-    int i;
-    for (i=0;i<10;i++)
-    {
-        scbalance[i]=ans[i+16];
-    }
+int i;
+for (i=0;i<10;i++)
+{
+	scbalance[i]=ans[i+16];
+}
 
-    for (i=0;i<4;i++)
-    {
-        status[i]=ans[i+12];
-    }
-    if ((status[0]==0x30)&&(status[1]==0x30)&&(status[2]==0x30)&&(status[3]==0x30))
-    {
+for (i=0;i<4;i++)
+{
+	status[i]=ans[i+12];
+}
+if ((status[0]==0x30)&&(status[1]==0x30)&&(status[2]==0x30)&&(status[3]==0x30))
+{
 
-        return 1;
-    }else
-    {
-        return 0;
-    }
+	return 1;
+}else
+{
+	return 0;
+}
 
-    return 1;
+return 1;
 }
 
 gboolean mandiri_sam_init(void)
 {
 
-    int ret;
+int ret;
 
-    ret = mdr_init_sam (CTX, epayment_setting.sam_pin,
-                        epayment_setting.instution_id,
-                        epayment_setting.terminal_id);
+ret = mdr_init_sam (CTX, epayment_setting.sam_pin,
+	epayment_setting.instution_id,
+	epayment_setting.terminal_id);
 
-    if (ret != MDR_SUCCESS)
-    {
-        if (mdr_get_status (CTX) == MDR_TIMEOUT)
-            etoll_status = FALSE;
-        return FALSE;
-    }
-    return TRUE;
+if (ret != MDR_SUCCESS)
+{
+	if (mdr_get_status (CTX) == MDR_TIMEOUT)
+		etoll_status = FALSE;
+	return FALSE;
+}
+return TRUE;
 }
 
 gboolean bri_sam_init(void)
 {
-    char _shift[4];
+char _shift[4];
 
     //  sprintf(_shift,"%02d",tct_data.shift);
-    sprintf(_shift,"%02d",1);
+sprintf(_shift,"%02d",1);
 
-    int ret = bri_init_sam (CTX, epayment_setting.bri_mid,
-                            epayment_setting.bri_tid,
-                            epayment_setting.bri_pcd,
-                            _shift);
+int ret = bri_init_sam (CTX, epayment_setting.bri_mid,
+	epayment_setting.bri_tid,
+	epayment_setting.bri_pcd,
+	_shift);
 
-    if (ret != MDR_SUCCESS)
-    {
-        if (mdr_get_status (CTX) == MDR_TIMEOUT)
-            etoll_status = FALSE;
-        return FALSE;
-    }
-    return TRUE;
+if (ret != MDR_SUCCESS)
+{
+	if (mdr_get_status (CTX) == MDR_TIMEOUT)
+		etoll_status = FALSE;
+	return FALSE;
+}
+return TRUE;
 }
 
 gboolean bca_sam_init(void)
 {
 
-    int ret = bca_init_sam (CTX, epayment_setting.bca_mid,
-                            epayment_setting.bca_tid);
+int ret = bca_init_sam (CTX, epayment_setting.bca_mid,
+	epayment_setting.bca_tid);
 
-    if (ret != MDR_SUCCESS)
-    {
-        if (mdr_get_status (CTX) == MDR_TIMEOUT)
-            etoll_status = FALSE;
-        return FALSE;
-    }
-    return TRUE;
+if (ret != MDR_SUCCESS)
+{
+	if (mdr_get_status (CTX) == MDR_TIMEOUT)
+		etoll_status = FALSE;
+	return FALSE;
+}
+return TRUE;
 }
 
 gboolean bni_sam_init(void)
 {
-    int ret = bni_init_sam (CTX, epayment_setting.bni_tid);
+int ret = bni_init_sam (CTX, epayment_setting.bni_tid);
 
-    if (ret != MDR_SUCCESS)
-    {
-        if (mdr_get_status (CTX) == MDR_TIMEOUT)
-            etoll_status = FALSE;
-        return FALSE;
-    }
-    return TRUE;
+if (ret != MDR_SUCCESS)
+{
+	if (mdr_get_status (CTX) == MDR_TIMEOUT)
+		etoll_status = FALSE;
+	return FALSE;
+}
+return TRUE;
 }
 
 

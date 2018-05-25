@@ -83,17 +83,19 @@ gboolean find_card_member_uid (unsigned long long  uid)
 	}
 }
 
-gboolean card_member_update (unsigned long long *uid, unsigned long long *saldo)
+gboolean card_member_update (unsigned long long uid, unsigned long long saldo)
 {
 	GChecksum *cksum;
+	PGconn *conn;
 	PGresult *res;
 	int status, row, col, i, j;
+
+	// card_member_update_file(uid,saldo);
 	
 	
-	
-	elm_debug (ELM_DEBUG_INFO, "%s: Member Card Update (%d,'%010d')\n", __func__,saldo,uid);
+	elm_debug (ELM_DEBUG_INFO, "%s: Member Card Update (%llu,%llu)\n", __func__,saldo, uid);
 	char *cmd;
-	cmd = g_strdup_printf("select enco_update_membercard (%d,'%010d')",saldo,uid);
+	cmd = g_strdup_printf("select enco_update_membercard (%llu,'%llu')",saldo,uid);
 	
 	if (!elm_db_connect (&conn))
 		return FALSE;
@@ -114,7 +116,7 @@ gboolean card_member_update (unsigned long long *uid, unsigned long long *saldo)
 }
 
 
-gboolean card_member_update_file (unsigned long long * uid, unsigned long long  * saldo)
+gboolean card_member_update_file (unsigned long long uid, unsigned long long  saldo)
 {
 	char *cmd;
 	int ret;
@@ -126,9 +128,9 @@ gboolean card_member_update_file (unsigned long long * uid, unsigned long long  
       return FALSE;
     }
 
-	cmd = sqlite3_mprintf ("UPDATE mc SET saldo=%d WHERE uid=%010d",saldo,uid );
+	cmd = sqlite3_mprintf ("UPDATE tblmembercard SET saldo=%llu WHERE uid='%llu'",saldo,uid );
  	
-	elm_debug (ELM_DEBUG_INFO, "%s: Member Card Update (%d,'%010d')\n", __func__,saldo,uid);
+	elm_debug (ELM_DEBUG_INFO, "%s: Member Card Update (%llu,%llu)\n", __func__,saldo,uid);
 				
 	ret = sqlite3_exec (membercard_log, cmd, NULL, NULL, NULL);
 	sqlite3_free (cmd);

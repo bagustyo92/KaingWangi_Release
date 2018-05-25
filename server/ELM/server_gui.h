@@ -24,6 +24,7 @@ int input_user(int input);
 char *info;
 int cancel_trig;
 int data_paket;
+int add_trig;
 void send_info();
 
 int trig;
