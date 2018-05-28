@@ -49,9 +49,6 @@ void printer (){
     iOut = write(fd, nama_print, strlen(nama_print));
     iOut = write(fd,"\x1B\x61\x0",3);
      iOut = write(fd,"\x1B\x21\x02",3);
-     iOut = write(fd, telp_print, strlen(telp_print));
-    iOut = write(fd,"\x1B\x61\x0",3);
-     iOut = write(fd,"\x1B\x21\x02",3);
     iOut = write(fd, resi_print, strlen(resi_print));
     iOut = write(fd,"\x1B\x61\x0",3);
      iOut = write(fd,"\x1B\x21\x02",3);

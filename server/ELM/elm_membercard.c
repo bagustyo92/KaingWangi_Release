@@ -48,7 +48,8 @@ gboolean get_card_member_data (const char *cmd)
 		membercard[i][0] = strtoull (PQgetvalue (res, i, 0), NULL, 10);
 		membercard[i][1] = strtoull (PQgetvalue (res, i, 1), NULL, 10);
 		membercard[i][2] = strtoull (PQgetvalue (res, i, 2), NULL, 10);
-		printf("%16llu %16llu %16llu\n", membercard[i+1][0],membercard[i][1],membercard[i][2]); 
+		//tambahan
+		printf("%16llu %16llu %16llu %16llu\n", membercard[i+1][0],membercard[i][1],membercard[i][2]); 
 		}
 		PQclear (res);
 		elm_db_close (&conn);
@@ -64,13 +65,75 @@ gboolean get_card_member_data (const char *cmd)
 
 }
 
+//tambahan db data
+gboolean get_card_member_datas (const char *cmd)
+{
+	GChecksum *cksum;
+	PGresult *res;
+	int status, row, col, i, j, ret;
+
+	if (!elm_db_connect (&conn))
+	{	
+		elm_debug (ELM_DEBUG_WARNING, "%s: Invalid Connect to Server \n", __func__);
+			
+		membercard_data[0][0]=0;
+		return FALSE;
+	}
+	
+	res = PQexec (conn, cmd);
+	status = PQresultStatus (res);
+	if (status != PGRES_TUPLES_OK)
+	{
+		elm_debug (ELM_DEBUG_ERROR, "%s: %s", __func__, 
+					PQresultErrorMessage (res));
+					
+		membercard_data[0][0]=0;
+		elm_db_close (&conn);
+		return FALSE;
+	}
+	row = PQntuples (res);
+	col = PQnfields (res);
+
+	if ((row == 1)&&(col==1))
+	{
+		elm_debug (ELM_DEBUG_WARNING, "%s: Get Data From Server\n", __func__);
+		printf("Nama \n");     
+		for(int i=0;i<row;i++)
+		{
+		membercard_data[i][1] = strtoull (PQgetvalue (res, i, 1), NULL, 10);
+		printf("%16llu\n", membercard_data[i+1][1]); 
+		}
+		PQclear (res);
+		elm_db_close (&conn);
+		return TRUE;
+	}else if (row==0)
+	{
+		elm_debug (ELM_DEBUG_WARNING, "%s: invalid row or col number: %s %d %d\n", __func__, cmd,col,row);
+		PQclear (res);
+		elm_db_close (&conn);
+		membercard_data[0][0]=1;
+		return FALSE;
+	}
+
+}
+
+
 
 gboolean find_card_member_uid (unsigned long long  uid)
 {
 	    char label[100];
         sprintf(label,"select * from enco_get_membercard('%010llu')",uid);
+        
+        //tambahan database nama
+        char data[100];
+        sprintf(data,"select * from enco_get_membercard_data('%llu')",uid);
+
+
 
      if((get_card_member_data(label)))
+	{	
+		return TRUE;
+	}else if((get_card_member_datas(data)))
 	{	
 		return TRUE;
 	} else if (membercard[0][0]==1)
@@ -93,7 +156,8 @@ gboolean card_member_update (unsigned long long uid, unsigned long long saldo)
 	// card_member_update_file(uid,saldo);
 	
 	
-	elm_debug (ELM_DEBUG_INFO, "%s: Member Card Update (%llu,%llu)\n", __func__,saldo, uid);
+	
+	elm_debug (ELM_DEBUG_INFO, "%s: Member Card Update (%llu,%llu)\n", __func__,saldo,uid);
 	char *cmd;
 	cmd = g_strdup_printf("select enco_update_membercard (%llu,'%llu')",saldo,uid);
 	
@@ -116,7 +180,41 @@ gboolean card_member_update (unsigned long long uid, unsigned long long saldo)
 }
 
 
-gboolean card_member_update_file (unsigned long long uid, unsigned long long  saldo)
+
+gboolean get_updated_name_saldo (unsigned long long uid)
+{
+	GChecksum *cksum;
+	PGconn *conn;
+	PGresult *res;
+	int status, row, col, i, j;
+
+	
+
+	char *cmd;
+	cmd = g_strdup_printf("select enco_get_membercard_data ('%llu')", uid);
+	
+	if (!elm_db_connect (&conn))
+		return elm_debug (ELM_DEBUG_INFO, "error!");
+
+	res = PQexec (conn, cmd);
+	status = PQresultStatus (res);
+	if (status != PGRES_TUPLES_OK)
+	{
+		elm_debug (ELM_DEBUG_ERROR, "%s: %s %s\n", __func__, cmd, PQresultErrorMessage (res));
+		elm_db_close (&conn);
+		return FALSE;
+	}
+
+	List_data.saldo[i][2] = membercard[i][2];
+	List_data.name[i][1] = membercard_data[i][1];
+
+	PQclear (res);
+	elm_db_close (&conn);
+	return FALSE;
+}
+
+
+gboolean card_member_update_file (unsigned long long * uid, unsigned long long  * saldo)
 {
 	char *cmd;
 	int ret;
@@ -128,9 +226,9 @@ gboolean card_member_update_file (unsigned long long uid, unsigned long long  sa
       return FALSE;
     }
 
-	cmd = sqlite3_mprintf ("UPDATE tblmembercard SET saldo=%llu WHERE uid='%llu'",saldo,uid );
+	cmd = sqlite3_mprintf ("UPDATE mc SET saldo=%d WHERE uid=%010d",saldo,uid );
  	
-	elm_debug (ELM_DEBUG_INFO, "%s: Member Card Update (%llu,%llu)\n", __func__,saldo,uid);
+	elm_debug (ELM_DEBUG_INFO, "%s: Member Card Update (%d,'%010d')\n", __func__,saldo,uid);
 				
 	ret = sqlite3_exec (membercard_log, cmd, NULL, NULL, NULL);
 	sqlite3_free (cmd);

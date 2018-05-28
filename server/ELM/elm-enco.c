@@ -547,6 +547,7 @@ unsigned char commandGetBalance[30] =
 			}
 
 			cst2_status = mdr_get_status (CTX);
+			
 
 
 //        if(out == 1){
@@ -1053,7 +1054,7 @@ unsigned char commandGetBalance[30] =
 //                        sprintf(print_paket,"Paket\t : %c\n", nama_paket);
             		sprintf(print_tarif,"Tarif\t : Rp. 50.000\n");
             		sprintf(print_saldo,"Saldo\t : Rp. %d\n",membercard[indeks][2]);
-            	sprintf(nama,"Nama\t : %d\n", membercard[indeks][2]);
+            	sprintf(nama,"Nama\t : %d\n", membercard_data[indeks][1]);
             		
             		sprintf(telp,"No. Telp\t : %c\n", membercard[indeks][2]);
 
@@ -1065,8 +1066,10 @@ unsigned char commandGetBalance[30] =
             		convert_cmd2 (&epayment.e1,cst_tsc->epayment_cmd);
             		cst_tsc->time_ex = time (NULL);
             		printf("E1 %d %llu \n",cst_tsc->epayment_balance, cardnum);
+            		
             		card_member_update(cardnum,cst_tsc->epayment_balance);
-            		printf("E2 %d %llu \n",cst_tsc->epayment_balance, cardnum);
+
+            		
             		elm_buffer_insert_epayment_data2 (cst_tsc);
             		setting_sn_inc();
             		info = label;
@@ -1096,8 +1099,11 @@ unsigned char commandGetBalance[30] =
             			send_info();
             			data_paket = 9;
             		}else if(data_paket == 5){
+
             			sprintf(uid,"TOP_UP=%llu",cardnum);
             			sprintf(print_saldo,"Saldo\t : Rp. %d\n",membercard[indeks][2]);
+            			get_updated_name_saldo(cardnum);
+            			printf("E2 %llu %llu \n",List_data.saldo[indeks][2], cardnum);
             			saldo_print = print_saldo;
                         //puts(data_paket);
             			info = uid;
@@ -1105,7 +1111,7 @@ unsigned char commandGetBalance[30] =
             			printer_topup();
             			
             			data_paket = 9;
-            			break;
+            			// break;
             		}else if(data_paket == 1 || data_paket == 2 || data_paket == 3){
             			send_info();
             			printer();
@@ -1115,7 +1121,8 @@ unsigned char commandGetBalance[30] =
             		cancel_trig = 0;
             		cancel_out = 1;
             		get_out = 1;
-
+            		get_updated_name_saldo(cardnum);
+            		printf("E3 %llu %llu \n",List_data.saldo[indeks][2], cardnum);
 
 
 //                        tariff = cost;
@@ -1159,10 +1166,7 @@ unsigned char commandGetBalance[30] =
                         puts("KARTU GK DIKENAL");
             		info = uid;
             		send_info();
-            		printer_topup();
-            	
             		
-            			break;
             	}else if(data_paket == 1 || data_paket == 2 || data_paket == 3){
             		info = label;
             		send_info();
@@ -1173,6 +1177,8 @@ unsigned char commandGetBalance[30] =
 
                     // }
             }
+            get_updated_name_saldo(cardnum);
+            printf("E4 %llu %llu \n",List_data.saldo[indeks][2], cardnum);
             break;
             default:
             if(!(&cst2_status==MDR_PURCHASE_TIMEOUT))
@@ -1198,11 +1204,7 @@ unsigned char commandGetBalance[30] =
                         //puts(data_paket);
             		info = uid;
             		send_info();
-            		printer_topup();
-            		sleep(4);
-            		printer_topup();
             		
-            			break;
             	}
             	else if(data_paket == 1 || data_paket == 2 || data_paket == 3){
 
