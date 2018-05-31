@@ -133,9 +133,9 @@ gboolean find_card_member_uid (unsigned long long  uid)
      if((get_card_member_data(label)))
 	{	
 		return TRUE;
-	}else if((get_card_member_datas(data)))
-	{	
-		return TRUE;
+	// }else if((get_card_member_datas(data)))
+	// {	
+	// 	return TRUE;
 	} else if (membercard[0][0]==1)
 	{
 		elm_debug (ELM_DEBUG_ERROR, "%s: cant find %llu\n", __func__, uid);
@@ -157,9 +157,9 @@ gboolean card_member_update (unsigned long long uid, unsigned long long saldo)
 	
 	
 	
-	elm_debug (ELM_DEBUG_INFO, "%s: Member Card Update (%llu,%llu)\n", __func__,saldo,uid);
+	elm_debug (ELM_DEBUG_INFO, "%s: Member Card Update (%llu,'%010llu')\n", __func__,saldo,uid);
 	char *cmd;
-	cmd = g_strdup_printf("select enco_update_membercard (%llu,'%llu')",saldo,uid);
+	cmd = g_strdup_printf("select enco_update_membercard (%llu,'%010llu')",saldo,uid);
 	
 	if (!elm_db_connect (&conn))
 		return FALSE;

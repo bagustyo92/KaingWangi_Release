@@ -6,12 +6,13 @@
 #include <sys/types.h>
 #include <time.h>
 #include <termios.h>
-
+unsigned long long cardnum;
 unsigned long long membercard[1000][3];
 //tambahan db data
 unsigned long long membercard_data[1000][3]; 
 int indeks;
 
+gboolean get_updated_name_saldo (unsigned long long uid);
 gboolean get_card_member_data (const char *);
 gboolean find_card_member_uid (unsigned long long );
 gboolean card_member_update (unsigned long long uid , unsigned long long saldo );

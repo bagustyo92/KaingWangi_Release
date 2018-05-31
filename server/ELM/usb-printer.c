@@ -106,9 +106,9 @@ void printer_topup (){
     iOut = write(fd, nama_print, strlen(nama_print));
     iOut = write(fd,"\x1B\x61\x0",3);
      iOut = write(fd,"\x1B\x21\x02",3);
-     iOut = write(fd, nominal_print, strlen(nominal_print));
-     iOut = write(fd,"\x1B\x61\x0",3);
-     iOut = write(fd,"\x1B\x21\x02",3);
+     // iOut = write(fd, nominal_print, strlen(nominal_print));
+     // iOut = write(fd,"\x1B\x61\x0",3);
+     // iOut = write(fd,"\x1B\x21\x02",3);
      iOut = write(fd, saldo_print, strlen(saldo_print));
     iOut = write(fd,"\n\n\n",3);
     iOut = write(fd,"\x1B\x61\x1",3);
@@ -117,6 +117,8 @@ void printer_topup (){
     iOut = write(fd,"\n",1);
     iOut = write(fd, ending, strlen(ending));
     iOut = write(fd,"\n\n\n\n\n",5);
+    get_updated_name_saldo(cardnum);
+                        printf("E5 %llu %llu \n",List_data.saldo[indeks][2], cardnum);
 
 
     close (fd);
