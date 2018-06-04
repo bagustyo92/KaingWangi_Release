@@ -1102,11 +1102,16 @@ unsigned char commandGetCardNumber[19] =
             			setting_sn_inc();
             			info = label;
             			
+
+            			send_info();
+            			
+            			printer();
+            			sleep(4);
             			printer();
 
 
 
-            			send_info();
+            			
             			
             		}
             		cancel_trig = 0;
