@@ -16,8 +16,7 @@ static const char * const elm_outlet[] =
 /* MAYTAG */
    [0] = "ENCO_LAUNDRY",
    [1] = "MAYTAG LAUNDRY",
-   [2] = "KAIN WANGI"
-    
+   [2] = "KAIN WANGI LAUNDRY",
 };
 
 static const char * const elm_location[] =

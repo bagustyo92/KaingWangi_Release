@@ -17,10 +17,11 @@ void printer (){
     int iOut = 0;
     char pesan[] = "TERIMA KASIH";
     char ending[] = "Powerd By TRITON INTERNASIONAL";
+    
     char nama_laundry[]= "KAINWANGI";
     char lokasi[] = "MANGGA DUA";
-    char telp[] = "No Telp";
-    char angka[] = "1234567890123456789";
+    char angka[]= "1234567890123456";
+    
 
     //scanf(pesan,"TESSS");
    // sprintf(E)
@@ -29,21 +30,31 @@ void printer (){
 
     fd=open(ComPort, O_WRONLY);
 
+    int jml_outlet;
+    char *size;
+
+
+    jml_outlet = strlen(elm_outlet[elm_setting.elm_outlet]);
+    if (jml_outlet <= 16){
+        size = "\x1B\x21\x30";
+    }else{
+        size = "\x1B\x21\x10";
+    }
+
     if(fd == -1);
     iOut = write(fd,"\x1B\x61\x1",3);
-    iOut = write(fd,"\x1B\x21\x30",3);
+    iOut = write(fd,size,3);
     iOut = write(fd,elm_outlet[elm_setting.elm_outlet], strlen(elm_outlet[elm_setting.elm_outlet]));
-    // iOut = write(fd,"\n",1);
-    // iOut = write(fd,angka, strlen(angka));
     iOut = write(fd,"\n",1);
     iOut = write(fd,"\x1B\x21\x2",3);
     iOut = write(fd,elm_location[elm_setting.elm_location], strlen(elm_location[elm_setting.elm_location]));
     iOut = write(fd,"\n",1);
-    iOut = write(fd,telp, strlen(telp));
+    iOut = write(fd,elm_setting.elm_telp, strlen(elm_setting.elm_telp));
     iOut = write(fd,"\n\n\n",3);
     iOut = write(fd,"\x1B\x61\x0",3);      // ratakiri
     iOut = write(fd,"\x1B\x21\x2",3);    //size
     iOut = write(fd, date_print, strlen(date_print));
+    iOut = write(fd,"\n",1);
     iOut = write(fd,"\x1B\x61\x0",3);
      iOut = write(fd,"\x1B\x21\x02",3);
     iOut = write(fd, nama_print, strlen(nama_print));
@@ -86,9 +97,20 @@ void printer_topup (){
 
     fd=open(ComPort, O_WRONLY);
 
+    int jml_outlet;
+    char *size;
+
+
+    jml_outlet = strlen(elm_outlet[elm_setting.elm_outlet]);
+    if (jml_outlet <= 16){
+        size = "\x1B\x21\x30";
+    }else{
+        size = "\x1B\x21\x10";
+    }
+
     if(fd == -1);
     iOut = write(fd,"\x1B\x61\x1",3);
-    iOut = write(fd,"\x1B\x21\x30",3);
+    iOut = write(fd,size,3);
     iOut = write(fd,elm_outlet[elm_setting.elm_outlet], strlen(elm_outlet[elm_setting.elm_outlet]));
     // iOut = write(fd,"\n",1);
     // iOut = write(fd,angka, strlen(angka));
@@ -96,11 +118,12 @@ void printer_topup (){
     iOut = write(fd,"\x1B\x21\x2",3);
     iOut = write(fd,elm_location[elm_setting.elm_location], strlen(elm_location[elm_setting.elm_location]));
     iOut = write(fd,"\n",1);
-    iOut = write(fd,telp, strlen(telp));
+    iOut = write(fd,elm_setting.elm_telp, strlen(elm_setting.elm_telp));
     iOut = write(fd,"\n\n\n",3);
     iOut = write(fd,"\x1B\x61\x0",3);      // ratakiri
     iOut = write(fd,"\x1B\x21\x2",3);    //size
     iOut = write(fd, date_print, strlen(date_print));
+    iOut = write(fd,"\n",1);
     iOut = write(fd,"\x1B\x61\x0",3);
      iOut = write(fd,"\x1B\x21\x02",3);
     iOut = write(fd, nama_print, strlen(nama_print));

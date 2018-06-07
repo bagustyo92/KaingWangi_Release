@@ -43,6 +43,8 @@
 #define ELM_LOCATION		 "ELM_LOKASI"
 #define ELM_TYPE				 "ELM_TYPE"
 #define ELM_MACHINE			"ELM_MACHINE"
+#define ELM_TELP		"ELM_TELP"
+
 
 FILE *fdsn;
 
@@ -244,6 +246,7 @@ gboolean elm_setting_read_enco (ELMElmSetting* elm)
 	elm->elm_type = g_key_file_get_integer (key, ELM_GROUP, ELM_TYPE, NULL);
 	elm->elm_machine = g_key_file_get_integer (key, ELM_GROUP, ELM_MACHINE, NULL);
 	elm->elm_lcd = g_key_file_get_integer (key, ELM_GROUP, ELM_LCD, NULL);
+	elm->elm_telp = g_key_file_get_string (key, ELM_GROUP, ELM_TELP, NULL);
 	
 	g_key_file_free (key);
 	return test;

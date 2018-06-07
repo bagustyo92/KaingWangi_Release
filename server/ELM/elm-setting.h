@@ -45,6 +45,7 @@ typedef struct _ELMEncoSetting
   int elm_type;
   int elm_machine;
   int elm_lcd;
+  char *elm_telp;
 } ELMElmSetting;
 
 typedef struct _ELMEncoSn

@@ -15,7 +15,6 @@ unsigned char nama_paket[1000];
 
 void printer_topyp();
 
-
 char *nominal_print;
 char *saldo_print;
 
